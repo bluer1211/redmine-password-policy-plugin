@@ -36,10 +36,13 @@
 
 ## 開發者
 
-- 作者：Jason
+- 作者：Jason Liu (bluer1211)
 - 版本：1.0.0
 - 授權：MIT License
+- GitHub：https://github.com/bluer1211
 
 ## 支援
 
-如有問題或建議，請提交 Issue 或 Pull Request。 
+如有問題或建議，請提交 Issue 或 Pull Request。
+- GitHub Issues：https://github.com/bluer1211/redmine-password-policy-plugin/issues
+- GitHub Repository：https://github.com/bluer1211/redmine-password-policy-plugin 

@@ -99,6 +99,8 @@ password_policy/
 1. 檢查 Redmine 日誌文件
 2. 確認插件設定是否正確
 3. 參考 `PLUGIN_STRUCTURE.md` 中的開發規範
+4. 提交 GitHub Issue：https://github.com/bluer1211/redmine-password-policy-plugin/issues
+5. 查看 GitHub 倉庫：https://github.com/bluer1211/redmine-password-policy-plugin
 
 ---
 

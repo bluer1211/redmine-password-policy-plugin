@@ -2,11 +2,11 @@ require 'redmine'
 
 Redmine::Plugin.register :password_policy do
   name 'Password Policy Plugin'
-  author 'Your Name'
+  author 'Jason Liu (bluer1211)'
   description 'Enforces password policy rules for Redmine users'
   version '1.0.0'
-  url 'https://github.com/yourusername/redmine_password_policy'
-  author_url 'https://yourwebsite.com'
+  url 'https://github.com/bluer1211/redmine-password-policy-plugin'
+  author_url 'https://github.com/bluer1211'
   
   # 設定設定頁面
   settings default: {
