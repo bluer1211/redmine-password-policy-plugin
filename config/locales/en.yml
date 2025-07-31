@@ -1,0 +1,61 @@
+en:
+  label_password_policy: "Password Policy"
+  label_password_requirements: "Password Requirements"
+  label_password_restrictions: "Password Restrictions"
+  label_password_expiry: "Password Expiry"
+  
+  label_minimum_length: "Minimum Length"
+  label_require_uppercase: "Require Uppercase Letters"
+  label_require_lowercase: "Require Lowercase Letters"
+  label_require_numbers: "Require Numbers"
+  label_require_special_chars: "Require Special Characters"
+  
+  label_prevent_common_passwords: "Prevent Common Passwords"
+  label_prevent_sequential_chars: "Prevent Sequential Characters"
+  label_prevent_keyboard_patterns: "Prevent Keyboard Pattern Characters"
+  label_prevent_repetitive_chars: "Prevent Repetitive Characters"
+  
+  label_password_expiry_days: "Password Expiry Days"
+  label_password_history_count: "Password History Count"
+  
+  label_password_policy_help: "Password Policy Help"
+  label_examples: "Examples"
+  label_good_password: "Good Password"
+  label_bad_password: "Bad Password"
+  
+  text_minimum_length_info: "Set the minimum number of characters for passwords"
+  text_password_expiry_info: "Set the number of days before passwords expire (0 = never expire)"
+  text_password_history_info: "Set the number of previous passwords that cannot be reused"
+  text_password_policy_help: "Password policy ensures users set secure passwords to prevent unauthorized access."
+  
+  # Error messages
+  too_short: "Password is too short (minimum is %{count} characters)"
+  must_contain_uppercase: "Password must contain at least one uppercase letter"
+  must_contain_lowercase: "Password must contain at least one lowercase letter"
+  must_contain_numbers: "Password must contain at least one number"
+  must_contain_special_chars: "Password must contain at least one special character"
+  contains_sequential_chars: "Password cannot contain sequential characters (e.g., 123456, abcdef)"
+  contains_keyboard_patterns: "Password cannot contain keyboard pattern characters (e.g., 1qaz2wsx, #EDC$RFV)"
+  contains_repetitive_chars: "Password cannot contain repetitive characters (e.g., aaa, 111)"
+  is_common_password: "Cannot use common passwords"
+  
+  # Buttons
+  button_save: "Save"
+  label_back: "Back"
+  
+  # ActiveRecord error messages
+  activerecord:
+    errors:
+      models:
+        user:
+          attributes:
+            password:
+              too_short: "Password is too short (minimum is %{count} characters)"
+              must_contain_uppercase: "Password must contain at least one uppercase letter"
+              must_contain_lowercase: "Password must contain at least one lowercase letter"
+              must_contain_numbers: "Password must contain at least one number"
+              must_contain_special_chars: "Password must contain at least one special character"
+              contains_sequential_chars: "Password cannot contain sequential characters (e.g., 123456, abcdef)"
+              contains_keyboard_patterns: "Password cannot contain keyboard pattern characters (e.g., 1qaz2wsx, #EDC$RFV)"
+              contains_repetitive_chars: "Password cannot contain repetitive characters (e.g., aaa, 111)"
+              is_common_password: "Cannot use common passwords" 

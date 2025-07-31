@@ -1,0 +1,46 @@
+zh-TW:
+  label_password_policy: "密碼政策"
+  label_password_requirements: "密碼要求"
+  label_password_restrictions: "密碼限制"
+  
+  label_minimum_length: "最小長度"
+  label_require_uppercase: "必須包含大寫字母"
+  label_require_lowercase: "必須包含小寫字母"
+  label_require_numbers: "必須包含數字"
+  label_require_special_chars: "必須包含特殊字符"
+  
+  label_prevent_common_passwords: "防止使用常見密碼"
+  label_prevent_sequential_chars: "防止使用連續字符"
+  label_prevent_keyboard_patterns: "防止使用連續鍵盤位置字符"
+  label_prevent_repetitive_chars: "防止使用重複字符"
+  
+  text_minimum_length_info: "設定密碼的最小字符數"
+  text_password_policy_help: "密碼政策用於確保用戶設定安全的密碼，避免帳號遭有心人士不當使用。"
+  
+  # 錯誤訊息
+  too_short: "密碼長度不足，至少需要 %{count} 個字符"
+  must_contain_uppercase: "密碼必須包含至少一個大寫字母"
+  must_contain_lowercase: "密碼必須包含至少一個小寫字母"
+  must_contain_numbers: "密碼必須包含至少一個數字"
+  must_contain_special_chars: "密碼必須包含至少一個特殊字符"
+  contains_sequential_chars: "密碼不能包含連續字符（如123456、abcdef等）"
+  contains_keyboard_patterns: "密碼不能包含連續鍵盤位置字符（如1qaz2wsx、#EDC$RFV等）"
+  contains_repetitive_chars: "密碼不能包含重複字符（如aaa、111等）"
+  is_common_password: "不能使用常見的密碼"
+  
+  # ActiveRecord 錯誤訊息
+  activerecord:
+    errors:
+      models:
+        user:
+          attributes:
+            password:
+              too_short: "密碼長度不足，至少需要 %{count} 個字符"
+              must_contain_uppercase: "密碼必須包含至少一個大寫字母"
+              must_contain_lowercase: "密碼必須包含至少一個小寫字母"
+              must_contain_numbers: "密碼必須包含至少一個數字"
+              must_contain_special_chars: "密碼必須包含至少一個特殊字符"
+              contains_sequential_chars: "密碼不能包含連續字符（如123456、abcdef等）"
+              contains_keyboard_patterns: "密碼不能包含連續鍵盤位置字符（如1qaz2wsx、#EDC$RFV等）"
+              contains_repetitive_chars: "密碼不能包含重複字符（如aaa、111等）"
+              is_common_password: "不能使用常見的密碼" 
