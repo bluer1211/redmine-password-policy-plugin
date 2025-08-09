@@ -1,9 +1,11 @@
 en:
   label_password_policy: "Password Policy"
+  label_general_settings: "General Settings"
   label_password_requirements: "Password Requirements"
   label_password_restrictions: "Password Restrictions"
   label_password_expiry: "Password Expiry"
   
+  label_enable_password_policy: "Enable Password Policy"
   label_minimum_length: "Minimum Length"
   label_require_uppercase: "Require Uppercase Letters"
   label_require_lowercase: "Require Lowercase Letters"
@@ -23,6 +25,7 @@ en:
   label_good_password: "Good Password"
   label_bad_password: "Bad Password"
   
+  text_enable_password_policy_info: "Enable or disable password policy functionality. When disabled, password validation will not be performed."
   text_minimum_length_info: "Set the minimum number of characters for passwords"
   text_password_expiry_info: "Set the number of days before passwords expire (0 = never expire)"
   text_password_history_info: "Set the number of previous passwords that cannot be reused"
@@ -39,6 +42,20 @@ en:
   contains_keyboard_patterns: "Password cannot contain keyboard pattern characters (e.g., 1qaz2wsx, #EDC$RFV)"
   contains_repetitive_chars: "Password cannot contain repetitive characters (e.g., aaa, 111)"
   is_common_password: "Cannot use common passwords"
+  
+  # Detailed error messages and improvement suggestions
+  detailed_error_messages:
+    too_short: "Password is too short. Suggestion: Use a password with at least 8 characters"
+    too_long: "Password is too long. Suggestion: Use a password with no more than 1000 characters"
+    must_contain_uppercase: "Password must contain uppercase letters. Suggestion: Add at least one uppercase letter (e.g., A-Z)"
+    must_contain_lowercase: "Password must contain lowercase letters. Suggestion: Add at least one lowercase letter (e.g., a-z)"
+    must_contain_numbers: "Password must contain numbers. Suggestion: Add at least one number (e.g., 0-9)"
+    must_contain_special_chars: "Password must contain special characters. Suggestion: Add at least one special character (e.g., !@#$%^&*)"
+    contains_sequential_chars: "Password cannot contain sequential characters. Suggestion: Avoid using sequential characters like 123456, abcdef"
+    contains_keyboard_patterns: "Password cannot contain keyboard patterns. Suggestion: Avoid using keyboard patterns like 1qaz2wsx"
+    contains_repetitive_chars: "Password cannot contain repetitive characters. Suggestion: Avoid using repetitive characters like aaa, 111"
+    is_common_password: "Cannot use common passwords. Suggestion: Choose a more unique and complex password"
+    validation_error: "Password validation failed. Suggestion: Use a complex password containing uppercase and lowercase letters, numbers, and special characters"
   
   # Buttons
   button_save: "Save"

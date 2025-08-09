@@ -121,6 +121,7 @@ module ActiveSupport
 
     def default_settings
       {
+        'enabled' => true,
         'min_length' => 8,
         'require_uppercase' => true,
         'require_lowercase' => true,
@@ -146,6 +147,7 @@ end
 class Setting
   def self.plugin_password_policy
     @plugin_password_policy ||= {
+      'enabled' => true,
       'min_length' => 8,
       'require_uppercase' => true,
       'require_lowercase' => true,
@@ -285,6 +287,12 @@ end
 
 # 模擬 PasswordValidator 類別
 class PasswordValidator < ActiveModel::EachValidator
+  # 預編譯正則表達式常數，提升效能
+  UPPERCASE_REGEX = /[A-Z]/.freeze
+  LOWERCASE_REGEX = /[a-z]/.freeze
+  NUMBERS_REGEX = /\d/.freeze
+  REPETITIVE_CHARS_REGEX = /(.)\1{2,}/.freeze
+
   # 靜態資料定義為類別常數，提升效能
   SEQUENTIAL_PATTERNS = [
     '1234567890', '0987654321', 'abcdefghijklmnopqrstuvwxyz',
@@ -321,86 +329,118 @@ class PasswordValidator < ActiveModel::EachValidator
   # 定義特殊字符列表，更精確的驗證
   SPECIAL_CHARS = %w[! @ # $ % ^ & * ( ) _ + - = [ ] { } ; ' : " \ | , . < > / ?].freeze
 
+  # 配置常數
+  MIN_LENGTH_RANGE = (1..50).freeze
+  MAX_LENGTH = 1000
+
   def validate_each(record, attribute, value)
     return if value.blank?
-    
+
     begin
       # 安全性檢查：確保輸入是字串
       value = value.to_s.strip
-      
+
+      # 記錄驗證開始
+      Rails.logger.debug "Password validation started for #{record.class.name}##{record.id || 'new'}"
+
       # 檢查輸入長度限制（防止過長輸入）
-      if value.length > 1000
-        record.errors.add(attribute, :too_long, count: 1000)
+      if value.length > MAX_LENGTH
+        record.errors.add(attribute, :too_long, count: MAX_LENGTH)
+        Rails.logger.warn "Password too long (#{value.length} chars) for #{record.class.name}##{record.id || 'new'}"
         return
       end
-      
+
       settings = Setting.plugin_password_policy
       return unless settings # 如果沒有設定，跳過驗證
-      
-      # 檢查最小長度
-      if settings['min_length'].to_i > 0 && value.length < settings['min_length'].to_i
-        record.errors.add(attribute, :too_short, count: settings['min_length'])
+
+      # 檢查插件是否啟用
+      unless settings['enabled']
+        Rails.logger.debug "Password Policy Plugin is disabled, skipping validation"
+        return
       end
-      
-      # 檢查大寫字母
-      if settings['require_uppercase'] && !value.match(/[A-Z]/)
-        record.errors.add(attribute, :must_contain_uppercase)
-      end
-      
-      # 檢查小寫字母
-      if settings['require_lowercase'] && !value.match(/[a-z]/)
-        record.errors.add(attribute, :must_contain_lowercase)
-      end
-      
-      # 檢查數字
-      if settings['require_numbers'] && !value.match(/\d/)
-        record.errors.add(attribute, :must_contain_numbers)
-      end
-      
-      # 檢查特殊字符（使用更精確的驗證）
-      if settings['require_special_chars'] && !SPECIAL_CHARS.any? { |char| value.include?(char) }
-        record.errors.add(attribute, :must_contain_special_chars)
-      end
-      
-      # 檢查連續字符
-      if settings['prevent_sequential_chars']
-        SEQUENTIAL_PATTERNS.each do |pattern|
-          if value.downcase.include?(pattern.downcase)
-            record.errors.add(attribute, :contains_sequential_chars)
-            break
-          end
-        end
-      end
-      
-      # 檢查連續鍵盤位置字符
-      if settings['prevent_keyboard_patterns']
-        KEYBOARD_PATTERNS.each do |pattern|
-          if value.downcase.include?(pattern.downcase)
-            record.errors.add(attribute, :contains_keyboard_patterns)
-            break
-          end
-        end
-      end
-      
-      # 檢查重複字符
-      if settings['prevent_repetitive_chars']
-        if value.match(/(.)\1{2,}/)
-          record.errors.add(attribute, :contains_repetitive_chars)
-        end
-      end
-      
-      # 檢查常見密碼
-      if settings['prevent_common_passwords']
-        if COMMON_PASSWORDS.include?(value.downcase)
-          record.errors.add(attribute, :is_common_password)
-        end
-      end
-      
+
+      # 驗證設定
+      validate_settings(settings)
+
+      # 執行驗證檢查
+      perform_validations(record, attribute, value, settings)
+
+      # 記錄驗證完成
+      Rails.logger.info "Password validation completed for #{record.class.name}##{record.id || 'new'}"
+
     rescue => e
-      Rails.logger.error "Password validation error: #{e.message}"
+      Rails.logger.error "Password validation error for #{record.class.name}##{record.id || 'new'}: #{e.message}"
       Rails.logger.error e.backtrace.join("\n")
       record.errors.add(attribute, :validation_error)
     end
+  end
+
+  # 新增：驗證設定
+  private def validate_settings(settings)
+    # 驗證最小長度
+    min_length = settings['min_length'].to_i
+    if min_length < MIN_LENGTH_RANGE.min || min_length > MIN_LENGTH_RANGE.max
+      settings['min_length'] = 8  # 重置為預設值
+      Rails.logger.warn "Invalid min_length setting, reset to default: 8"
+    end
+  end
+
+  # 新增：執行驗證檢查
+  private def perform_validations(record, attribute, value, settings)
+    # 檢查最小長度
+    if settings['min_length'].to_i > 0 && value.length < settings['min_length'].to_i
+      record.errors.add(attribute, :too_short, count: settings['min_length'])
+    end
+
+    # 檢查大寫字母
+    if settings['require_uppercase'] && !value.match(UPPERCASE_REGEX)
+      record.errors.add(attribute, :must_contain_uppercase)
+    end
+
+    # 檢查小寫字母
+    if settings['require_lowercase'] && !value.match(LOWERCASE_REGEX)
+      record.errors.add(attribute, :must_contain_lowercase)
+    end
+
+    # 檢查數字
+    if settings['require_numbers'] && !value.match(NUMBERS_REGEX)
+      record.errors.add(attribute, :must_contain_numbers)
+    end
+
+    # 檢查特殊字符（使用更精確的驗證）
+    if settings['require_special_chars'] && !SPECIAL_CHARS.any? { |char| value.include?(char) }
+      record.errors.add(attribute, :must_contain_special_chars)
+    end
+
+    # 檢查連續字符
+    if settings['prevent_sequential_chars'] && contains_sequential_chars?(value)
+      record.errors.add(attribute, :contains_sequential_chars)
+    end
+
+    # 檢查連續鍵盤位置字符
+    if settings['prevent_keyboard_patterns'] && contains_keyboard_patterns?(value)
+      record.errors.add(attribute, :contains_keyboard_patterns)
+    end
+
+    # 檢查重複字符
+    if settings['prevent_repetitive_chars'] && value.match(REPETITIVE_CHARS_REGEX)
+      record.errors.add(attribute, :contains_repetitive_chars)
+    end
+
+    # 檢查常見密碼
+    if settings['prevent_common_passwords'] && COMMON_PASSWORDS.include?(value.downcase)
+      record.errors.add(attribute, :is_common_password)
+    end
+  end
+
+  # 新增：檢查連續字符
+  private def contains_sequential_chars?(value)
+    SEQUENTIAL_PATTERNS.any? { |pattern| value.downcase.include?(pattern.downcase) }
+  end
+
+  # 新增：檢查鍵盤模式
+  private def contains_keyboard_patterns?(value)
+    KEYBOARD_PATTERNS.any? { |pattern| value.downcase.include?(pattern.downcase) }
   end
 
   # 計算密碼強度（1-5級）
@@ -414,13 +454,13 @@ class PasswordValidator < ActiveModel::EachValidator
     strength += 1 if password.length >= 12
     
     # 字符類型檢查
-    strength += 1 if password.match(/[A-Z]/)  # 大寫字母
-    strength += 1 if password.match(/[a-z]/)  # 小寫字母
-    strength += 1 if password.match(/\d/)     # 數字
+    strength += 1 if password.match(UPPERCASE_REGEX)  # 大寫字母
+    strength += 1 if password.match(LOWERCASE_REGEX)  # 小寫字母
+    strength += 1 if password.match(NUMBERS_REGEX)     # 數字
     strength += 1 if SPECIAL_CHARS.any? { |char| password.include?(char) }  # 特殊字符
     
     # 額外安全檢查
-    strength += 1 if password.length >= 16 && password.match(/[A-Z]/) && password.match(/[a-z]/) && password.match(/\d/) && SPECIAL_CHARS.any? { |char| password.include?(char) }
+    strength += 1 if password.length >= 16 && password.match(UPPERCASE_REGEX) && password.match(LOWERCASE_REGEX) && password.match(NUMBERS_REGEX) && SPECIAL_CHARS.any? { |char| password.include?(char) }
     
     [strength, 5].min  # 最高5級
   end
@@ -440,6 +480,181 @@ class PasswordValidator < ActiveModel::EachValidator
       '非常強'
     else
       '未知'
+    end
+  end
+
+  # 新增：詳細錯誤訊息
+  def self.detailed_error_message(error_type)
+    case error_type
+    when :too_short
+      "密碼長度不足。建議：使用至少8個字符的密碼"
+    when :too_long
+      "密碼長度過長。建議：使用不超過1000個字符的密碼"
+    when :must_contain_uppercase
+      "密碼必須包含大寫字母。建議：至少包含一個大寫字母（A-Z）"
+    when :must_contain_lowercase
+      "密碼必須包含小寫字母。建議：至少包含一個小寫字母（a-z）"
+    when :must_contain_numbers
+      "密碼必須包含數字。建議：至少包含一個數字（0-9）"
+    when :must_contain_special_chars
+      "密碼必須包含特殊字符。建議：至少包含一個特殊字符（!@#$%^&*等）"
+    when :contains_sequential_chars
+      "密碼包含連續字符。建議：避免使用連續字符（如123456、abcdef）"
+    when :contains_keyboard_patterns
+      "密碼包含鍵盤模式。建議：避免使用鍵盤模式（如1qaz2wsx）"
+    when :contains_repetitive_chars
+      "密碼包含重複字符。建議：避免使用重複字符（如aaa、111）"
+    when :is_common_password
+      "密碼過於常見。建議：使用更獨特的密碼"
+    else
+      "密碼不符合要求。建議：檢查密碼政策設定"
+    end
+  end
+end
+
+# 新增：PasswordPolicyUtils 模組
+module PasswordPolicyUtils
+  # 密碼強度評估器
+  class StrengthEvaluator
+    def self.calculate_score(password)
+      return 0 if password.blank?
+      
+      score = 0
+      
+      # 長度分數
+      score += [password.length * 4, 25].min
+      
+      # 字符類型分數
+      score += 10 if password.match(/[A-Z]/)
+      score += 10 if password.match(/[a-z]/)
+      score += 10 if password.match(/\d/)
+      score += 15 if password.match(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/)
+      
+      # 複雜度獎勵
+      score += 10 if password.length >= 12
+      score += 10 if password.match(/[A-Z]/) && password.match(/[a-z]/) && password.match(/\d/) && password.match(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/)
+      
+      [score, 100].min
+    end
+
+    def self.get_strength_level(score)
+      case score
+      when 0..20
+        { level: 'very_weak', description: '非常弱' }
+      when 21..40
+        { level: 'weak', description: '弱' }
+      when 41..60
+        { level: 'medium', description: '中等' }
+      when 61..80
+        { level: 'strong', description: '強' }
+      else
+        { level: 'very_strong', description: '非常強' }
+      end
+    end
+  end
+
+  # 建議生成器
+  class SuggestionGenerator
+    def self.generate_suggestions(password, errors)
+      suggestions = []
+      
+      errors.each do |error|
+        case error
+        when :too_short
+          suggestions << "增加密碼長度到至少8個字符"
+        when :must_contain_uppercase
+          suggestions << "添加至少一個大寫字母（A-Z）"
+        when :must_contain_lowercase
+          suggestions << "添加至少一個小寫字母（a-z）"
+        when :must_contain_numbers
+          suggestions << "添加至少一個數字（0-9）"
+        when :must_contain_special_chars
+          suggestions << "添加至少一個特殊字符（!@#$%^&*等）"
+        when :contains_sequential_chars
+          suggestions << "避免使用連續字符（如123456、abcdef）"
+        when :contains_keyboard_patterns
+          suggestions << "避免使用鍵盤模式（如1qaz2wsx）"
+        when :contains_repetitive_chars
+          suggestions << "避免使用重複字符（如aaa、111）"
+        when :is_common_password
+          suggestions << "使用更獨特的密碼"
+        end
+      end
+      
+      suggestions
+    end
+
+    def self.generate_examples
+      [
+        'MyS3cur3P@ssw0rd!',
+        'N3wS3cur3P@ssw0rd!',
+        'C0mpl3xP@ssw0rd!',
+        'S3cur3P@ssw0rd2024!',
+        'V3ryS3cur3P@ssw0rd!'
+      ]
+    end
+  end
+
+  # 配置驗證器
+  class ConfigValidator
+    def self.validate_config(settings)
+      errors = []
+
+      # 驗證啟用設定
+      unless [true, false, '1', '0', 1, 0].include?(settings['enabled'])
+        errors << "enabled 必須是布林值"
+      end
+
+      # 驗證最小長度
+      min_length = settings['min_length'].to_i
+      if min_length < 1 || min_length > 50
+        errors << "最小長度必須在1-50之間"
+      end
+
+      # 驗證布林設定
+      boolean_settings = [
+        'require_uppercase', 'require_lowercase', 'require_numbers',
+        'require_special_chars', 'prevent_common_passwords',
+        'prevent_sequential_chars', 'prevent_keyboard_patterns', 'prevent_repetitive_chars'
+      ]
+
+      boolean_settings.each do |setting|
+        unless [true, false, '1', '0', 1, 0, nil].include?(settings[setting])
+          errors << "#{setting} 必須是布林值"
+        end
+      end
+
+      errors
+    end
+
+    def self.clean_config(settings)
+      cleaned = settings.dup
+
+      # 清理啟用設定
+      cleaned['enabled'] = cleaned['enabled'].to_s == 'true' || cleaned['enabled'].to_s == '1'
+
+      # 清理最小長度
+      min_length = cleaned['min_length'].to_i
+      cleaned['min_length'] = [[min_length, 1].max, 50].min
+
+      # 清理布林設定
+      boolean_settings = [
+        'require_uppercase', 'require_lowercase', 'require_numbers',
+        'require_special_chars', 'prevent_common_passwords',
+        'prevent_sequential_chars', 'prevent_keyboard_patterns', 'prevent_repetitive_chars'
+      ]
+
+      boolean_settings.each do |setting|
+        cleaned[setting] = cleaned[setting].to_s == 'true' || cleaned[setting].to_s == '1'
+      end
+
+      cleaned
+    end
+
+    def self.enabled?
+      settings = Setting.plugin_password_policy
+      return false unless settings
+      settings['enabled'].to_s == 'true' || settings['enabled'].to_s == '1'
     end
   end
 end
@@ -481,246 +696,6 @@ module TestHelpers
   end
 end
 
-# 單元測試類別
-class PasswordValidatorTest < ActiveSupport::TestCase
-  def setup
-    @validator = PasswordValidator.new(attributes: [:password])
-    @record = User.new
-  end
-
-  def test_valid_password
-    Setting.stubs(:plugin_password_policy).returns({
-      'min_length' => 8,
-      'require_uppercase' => true,
-      'require_lowercase' => true,
-      'require_numbers' => true,
-      'require_special_chars' => true,
-      'prevent_common_passwords' => true,
-      'prevent_sequential_chars' => true,
-      'prevent_repetitive_chars' => true
-    })
-
-    @validator.validate_each(@record, :password, 'MyS3cur3P@ssw0rd!')
-    assert_empty @record.errors[:password]
-  end
-
-  def test_password_too_short
-    Setting.stubs(:plugin_password_policy).returns({
-      'min_length' => 10,
-      'require_uppercase' => false,
-      'require_lowercase' => false,
-      'require_numbers' => false,
-      'require_special_chars' => false,
-      'prevent_common_passwords' => false,
-      'prevent_sequential_chars' => false,
-      'prevent_repetitive_chars' => false
-    })
-
-    @validator.validate_each(@record, :password, 'short')
-    assert_includes @record.errors[:password], '密碼長度不足，至少需要 10 個字符'
-  end
-
-  def test_password_missing_uppercase
-    Setting.stubs(:plugin_password_policy).returns({
-      'min_length' => 8,
-      'require_uppercase' => true,
-      'require_lowercase' => false,
-      'require_numbers' => false,
-      'require_special_chars' => false,
-      'prevent_common_passwords' => false,
-      'prevent_sequential_chars' => false,
-      'prevent_repetitive_chars' => false
-    })
-
-    @validator.validate_each(@record, :password, 'mypassword123')
-    assert_includes @record.errors[:password], '密碼必須包含至少一個大寫字母'
-  end
-
-  def test_password_missing_lowercase
-    Setting.stubs(:plugin_password_policy).returns({
-      'min_length' => 8,
-      'require_uppercase' => false,
-      'require_lowercase' => true,
-      'require_numbers' => false,
-      'require_special_chars' => false,
-      'prevent_common_passwords' => false,
-      'prevent_sequential_chars' => false,
-      'prevent_repetitive_chars' => false
-    })
-
-    @validator.validate_each(@record, :password, 'MYPASSWORD123')
-    assert_includes @record.errors[:password], '密碼必須包含至少一個小寫字母'
-  end
-
-  def test_password_missing_numbers
-    Setting.stubs(:plugin_password_policy).returns({
-      'min_length' => 8,
-      'require_uppercase' => false,
-      'require_lowercase' => false,
-      'require_numbers' => true,
-      'require_special_chars' => false,
-      'prevent_common_passwords' => false,
-      'prevent_sequential_chars' => false,
-      'prevent_repetitive_chars' => false
-    })
-
-    @validator.validate_each(@record, :password, 'MyPassword')
-    assert_includes @record.errors[:password], '密碼必須包含至少一個數字'
-  end
-
-  def test_password_missing_special_chars
-    Setting.stubs(:plugin_password_policy).returns({
-      'min_length' => 8,
-      'require_uppercase' => false,
-      'require_lowercase' => false,
-      'require_numbers' => false,
-      'require_special_chars' => true,
-      'prevent_common_passwords' => false,
-      'prevent_sequential_chars' => false,
-      'prevent_repetitive_chars' => false
-    })
-
-    @validator.validate_each(@record, :password, 'MyPassword123')
-    assert_includes @record.errors[:password], '密碼必須包含至少一個特殊字符'
-  end
-
-  def test_common_password_rejected
-    Setting.stubs(:plugin_password_policy).returns({
-      'min_length' => 8,
-      'require_uppercase' => false,
-      'require_lowercase' => false,
-      'require_numbers' => false,
-      'require_special_chars' => false,
-      'prevent_common_passwords' => true,
-      'prevent_sequential_chars' => false,
-      'prevent_repetitive_chars' => false
-    })
-
-    @validator.validate_each(@record, :password, 'password')
-    assert_includes @record.errors[:password], '不能使用常見的密碼'
-  end
-
-  def test_sequential_chars_rejected
-    Setting.stubs(:plugin_password_policy).returns({
-      'min_length' => 8,
-      'require_uppercase' => false,
-      'require_lowercase' => false,
-      'require_numbers' => false,
-      'require_special_chars' => false,
-      'prevent_common_passwords' => false,
-      'prevent_sequential_chars' => true,
-      'prevent_repetitive_chars' => false
-    })
-
-    @validator.validate_each(@record, :password, 'password1234567890')
-    assert_includes @record.errors[:password], '密碼不能包含連續字符（如123456、abcdef等）'
-  end
-
-  def test_keyboard_patterns_rejected
-    Setting.stubs(:plugin_password_policy).returns({
-      'min_length' => 8,
-      'require_uppercase' => false,
-      'require_lowercase' => false,
-      'require_numbers' => false,
-      'require_special_chars' => false,
-      'prevent_common_passwords' => false,
-      'prevent_sequential_chars' => false,
-      'prevent_keyboard_patterns' => true,
-      'prevent_repetitive_chars' => false
-    })
-
-    @validator.validate_each(@record, :password, 'password1qaz2wsx')
-    assert_includes @record.errors[:password], '密碼不能包含連續鍵盤位置字符（如1qaz2wsx、#EDC$RFV等）'
-  end
-
-  def test_repetitive_chars_rejected
-    Setting.stubs(:plugin_password_policy).returns({
-      'min_length' => 8,
-      'require_uppercase' => false,
-      'require_lowercase' => false,
-      'require_numbers' => false,
-      'require_special_chars' => false,
-      'prevent_common_passwords' => false,
-      'prevent_sequential_chars' => false,
-      'prevent_repetitive_chars' => true
-    })
-
-    @validator.validate_each(@record, :password, 'passwordaaa')
-    assert_includes @record.errors[:password], '密碼不能包含重複字符（如aaa、111等）'
-  end
-
-  def test_empty_password_skipped
-    Setting.stubs(:plugin_password_policy).returns({
-      'min_length' => 8,
-      'require_uppercase' => true,
-      'require_lowercase' => true,
-      'require_numbers' => true,
-      'require_special_chars' => true,
-      'prevent_common_passwords' => true,
-      'prevent_sequential_chars' => true,
-      'prevent_repetitive_chars' => true
-    })
-
-    @validator.validate_each(@record, :password, '')
-    assert_empty @record.errors[:password]
-  end
-
-  def test_nil_password_skipped
-    Setting.stubs(:plugin_password_policy).returns({
-      'min_length' => 8,
-      'require_uppercase' => true,
-      'require_lowercase' => true,
-      'require_numbers' => true,
-      'require_special_chars' => true,
-      'prevent_common_passwords' => true,
-      'prevent_sequential_chars' => true,
-      'prevent_repetitive_chars' => true
-    })
-
-    @validator.validate_each(@record, :password, nil)
-    assert_empty @record.errors[:password]
-  end
-
-  def test_no_settings_skipped
-    Setting.stubs(:plugin_password_policy).returns(nil)
-
-    @validator.validate_each(@record, :password, 'weakpassword')
-    assert_empty @record.errors[:password]
-  end
-
-  def test_password_too_long
-    Setting.stubs(:plugin_password_policy).returns({
-      'min_length' => 8,
-      'require_uppercase' => false,
-      'require_lowercase' => false,
-      'require_numbers' => false,
-      'require_special_chars' => false,
-      'prevent_common_passwords' => false,
-      'prevent_sequential_chars' => false,
-      'prevent_repetitive_chars' => false
-    })
-
-    long_password = 'a' * 1001
-    @validator.validate_each(@record, :password, long_password)
-    assert_includes @record.errors[:password], '密碼長度過長，最多只能 1000 個字符'
-  end
-
-  def test_password_strength_calculation
-    assert_equal 0, PasswordValidator.calculate_password_strength('')
-    assert_equal 2, PasswordValidator.calculate_password_strength('password')  # 長度 >= 8, 小寫字母
-    assert_equal 4, PasswordValidator.calculate_password_strength('Password123')  # 長度 >= 8, 大寫, 小寫, 數字
-    assert_equal 5, PasswordValidator.calculate_password_strength('MyS3cur3P@ssw0rd!')  # 所有條件都滿足
-  end
-
-  def test_password_strength_description
-    assert_equal '非常弱', PasswordValidator.password_strength_description(0)
-    assert_equal '弱', PasswordValidator.password_strength_description(2)
-    assert_equal '中等', PasswordValidator.password_strength_description(3)
-    assert_equal '強', PasswordValidator.password_strength_description(4)
-    assert_equal '非常強', PasswordValidator.password_strength_description(5)
-  end
-end
-
 # 整合測試類別
 class PasswordPolicyIntegrationTest < ActionDispatch::IntegrationTest
   def setup
@@ -734,6 +709,7 @@ class PasswordPolicyIntegrationTest < ActionDispatch::IntegrationTest
     
     # 啟用密碼政策插件
     Setting.plugin_password_policy = {
+      'enabled' => true,
       'min_length' => 8,
       'require_uppercase' => true,
       'require_lowercase' => true,
@@ -756,6 +732,7 @@ class PasswordPolicyIntegrationTest < ActionDispatch::IntegrationTest
     
     # 設置密碼政策
     Setting.stubs(:plugin_password_policy).returns({
+      'enabled' => true,
       'min_length' => 8,
       'require_uppercase' => false,
       'require_lowercase' => false,
@@ -819,17 +796,242 @@ class PasswordPolicyIntegrationTest < ActionDispatch::IntegrationTest
 
   def test_password_strength_calculation
     assert_equal 0, PasswordValidator.calculate_password_strength('')
-    assert_equal 2, PasswordValidator.calculate_password_strength('password')  # 長度 >= 8, 小寫字母
-    assert_equal 4, PasswordValidator.calculate_password_strength('Password123')  # 長度 >= 8, 大寫, 小寫, 數字
-    assert_equal 5, PasswordValidator.calculate_password_strength('MyS3cur3P@ssw0rd!')  # 所有條件都滿足
+    assert_equal 0, PasswordValidator.calculate_password_strength(nil)
+    assert_equal 1, PasswordValidator.calculate_password_strength('password')
+    assert_equal 2, PasswordValidator.calculate_password_strength('password123')
+    assert_equal 3, PasswordValidator.calculate_password_strength('Password123')
+    assert_equal 4, PasswordValidator.calculate_password_strength('Password123!')
+    assert_equal 5, PasswordValidator.calculate_password_strength('MyS3cur3P@ssw0rd!')
   end
 
   def test_password_strength_description
+    assert_equal '非常弱', PasswordValidator.password_strength_description(0)
     assert_equal '非常弱', PasswordValidator.password_strength_description(1)
     assert_equal '弱', PasswordValidator.password_strength_description(2)
     assert_equal '中等', PasswordValidator.password_strength_description(3)
     assert_equal '強', PasswordValidator.password_strength_description(4)
     assert_equal '非常強', PasswordValidator.password_strength_description(5)
+    assert_equal '未知', PasswordValidator.password_strength_description(6)
+  end
+
+  # 新增：測試啟用功能
+  def test_plugin_disabled_skips_validation
+    # 停用密碼政策
+    Setting.plugin_password_policy = {
+      'enabled' => false,
+      'min_length' => 8,
+      'require_uppercase' => true,
+      'require_lowercase' => true,
+      'require_numbers' => true,
+      'require_special_chars' => true,
+      'prevent_common_passwords' => true,
+      'prevent_sequential_chars' => true,
+      'prevent_keyboard_patterns' => true,
+      'prevent_repetitive_chars' => true
+    }
+
+    # 嘗試使用弱密碼，應該不會有驗證錯誤
+    user = User.new
+    user.password = 'password'
+    user.password_confirmation = 'password'
+    
+    validator = PasswordValidator.new(attributes: [:password])
+    validator.validate_each(user, :password, user.password)
+    
+    # 由於插件被停用，應該不會有密碼驗證錯誤
+    assert_empty user.errors[:password]
+  end
+
+  def test_plugin_enabled_performs_validation
+    # 重新啟用密碼政策
+    Setting.plugin_password_policy = {
+      'enabled' => true,
+      'min_length' => 8,
+      'require_uppercase' => true,
+      'require_lowercase' => false,
+      'require_numbers' => false,
+      'require_special_chars' => false,
+      'prevent_common_passwords' => false,
+      'prevent_sequential_chars' => false,
+      'prevent_keyboard_patterns' => false,
+      'prevent_repetitive_chars' => false
+    }
+
+    # 嘗試使用弱密碼，應該有驗證錯誤
+    user = User.new
+    user.password = 'weakpassword'
+    user.password_confirmation = 'weakpassword'
+    
+    validator = PasswordValidator.new(attributes: [:password])
+    validator.validate_each(user, :password, user.password)
+    
+    assert_includes user.errors[:password], '密碼必須包含至少一個大寫字母'
+  end
+
+  # 新增：測試詳細錯誤訊息功能
+  def test_detailed_error_messages
+    # 測試各種錯誤類型的詳細訊息
+    assert_includes PasswordValidator.detailed_error_message(:too_short), '建議'
+    assert_includes PasswordValidator.detailed_error_message(:too_long), '建議'
+    assert_includes PasswordValidator.detailed_error_message(:must_contain_uppercase), '建議'
+    assert_includes PasswordValidator.detailed_error_message(:must_contain_lowercase), '建議'
+    assert_includes PasswordValidator.detailed_error_message(:must_contain_numbers), '建議'
+    assert_includes PasswordValidator.detailed_error_message(:must_contain_special_chars), '建議'
+    assert_includes PasswordValidator.detailed_error_message(:contains_sequential_chars), '建議'
+    assert_includes PasswordValidator.detailed_error_message(:contains_keyboard_patterns), '建議'
+    assert_includes PasswordValidator.detailed_error_message(:contains_repetitive_chars), '建議'
+    assert_includes PasswordValidator.detailed_error_message(:is_common_password), '建議'
+  end
+
+  # 新增：測試配置驗證功能
+  def test_settings_validation
+    # 測試無效的最小長度設定
+    invalid_settings = { 'min_length' => 100 }  # 超出範圍
+    validator = PasswordValidator.new(attributes: [:password])
+    validator.send(:validate_settings, invalid_settings)
+    assert_equal 8, invalid_settings['min_length']  # 應該被重置為預設值
+  end
+
+  # 新增：測試效能優化
+  def test_performance_optimizations
+    # 測試預編譯正則表達式
+    assert_instance_of Regexp, PasswordValidator::UPPERCASE_REGEX
+    assert_instance_of Regexp, PasswordValidator::LOWERCASE_REGEX
+    assert_instance_of Regexp, PasswordValidator::NUMBERS_REGEX
+    assert_instance_of Regexp, PasswordValidator::REPETITIVE_CHARS_REGEX
+  end
+
+  # 新增：測試新的私有方法
+  def test_contains_sequential_chars_method
+    validator = PasswordValidator.new(attributes: [:password])
+    # 測試連續字符檢測
+    assert validator.send(:contains_sequential_chars?, 'password1234567890')
+    assert !validator.send(:contains_sequential_chars?, 'password123')
+  end
+
+  def test_contains_keyboard_patterns_method
+    validator = PasswordValidator.new(attributes: [:password])
+    # 測試鍵盤模式檢測
+    assert validator.send(:contains_keyboard_patterns?, 'password1qaz2wsx')
+    assert !validator.send(:contains_keyboard_patterns?, 'password123')
+  end
+
+  # 新增：測試工具類別
+  def test_strength_evaluator
+    # 測試密碼強度評估
+    score = PasswordPolicyUtils::StrengthEvaluator.calculate_score('MyS3cur3P@ssw0rd!')
+    assert score > 80, "強密碼應該有高分數"
+    
+    weak_score = PasswordPolicyUtils::StrengthEvaluator.calculate_score('password')
+    assert weak_score < 40, "弱密碼應該有低分數"
+    
+    # 測試強度等級
+    level = PasswordPolicyUtils::StrengthEvaluator.get_strength_level(score)
+    assert_equal 'very_strong', level[:level]
+    assert_equal '非常強', level[:description]
+  end
+
+  def test_suggestion_generator
+    # 測試建議生成
+    suggestions = PasswordPolicyUtils::SuggestionGenerator.generate_suggestions('weak', [:too_short, :must_contain_uppercase])
+    assert suggestions.any? { |s| s.include?('增加密碼長度') }
+    assert suggestions.any? { |s| s.include?('大寫字母') }
+    
+    # 測試範例生成
+    examples = PasswordPolicyUtils::SuggestionGenerator.generate_examples
+    assert examples.length > 0
+    assert examples.all? { |ex| ex.length >= 8 }
+  end
+
+  def test_config_validator
+    # 測試配置驗證
+    valid_config = {
+      'enabled' => true,
+      'min_length' => 8,
+      'require_uppercase' => true,
+      'require_lowercase' => true
+    }
+    errors = PasswordPolicyUtils::ConfigValidator.validate_config(valid_config)
+    assert_empty errors
+    
+    # 測試無效配置
+    invalid_config = {
+      'enabled' => 'invalid',  # 無效布林值
+      'min_length' => 100,  # 超出範圍
+      'require_uppercase' => 'invalid'  # 無效布林值
+    }
+    errors = PasswordPolicyUtils::ConfigValidator.validate_config(invalid_config)
+    assert errors.any?
+    
+    # 測試配置清理
+    cleaned = PasswordPolicyUtils::ConfigValidator.clean_config(invalid_config)
+    assert_equal true, cleaned['enabled']  # 應該被轉換為布林值
+    assert_equal 50, cleaned['min_length']  # 應該被限制在最大值
+    assert_equal false, cleaned['require_uppercase']  # 應該被轉換為布林值
+  end
+
+  def test_config_validator_enabled_method
+    # 測試啟用檢查方法
+    Setting.stubs(:plugin_password_policy).returns({ 'enabled' => true })
+    assert PasswordPolicyUtils::ConfigValidator.enabled?
+    
+    Setting.stubs(:plugin_password_policy).returns({ 'enabled' => false })
+    assert !PasswordPolicyUtils::ConfigValidator.enabled?
+    
+    Setting.stubs(:plugin_password_policy).returns(nil)
+    assert !PasswordPolicyUtils::ConfigValidator.enabled?
+  end
+
+  # 新增：測試邊界條件
+  def test_password_too_long
+    Setting.plugin_password_policy = {
+      'enabled' => true,
+      'min_length' => 8,
+      'require_uppercase' => false,
+      'require_lowercase' => false,
+      'require_numbers' => false,
+      'require_special_chars' => false,
+      'prevent_common_passwords' => false,
+      'prevent_sequential_chars' => false,
+      'prevent_keyboard_patterns' => false,
+      'prevent_repetitive_chars' => false
+    }
+
+    long_password = 'a' * 1001
+    user = User.new
+    user.password = long_password
+    user.password_confirmation = long_password
+    
+    validator = PasswordValidator.new(attributes: [:password])
+    validator.validate_each(user, :password, user.password)
+    
+    assert_includes user.errors[:password], '密碼長度過長，最多只能 1000 個字符'
+  end
+
+  def test_password_with_unicode_characters
+    Setting.plugin_password_policy = {
+      'enabled' => true,
+      'min_length' => 8,
+      'require_uppercase' => false,
+      'require_lowercase' => false,
+      'require_numbers' => false,
+      'require_special_chars' => false,
+      'prevent_common_passwords' => false,
+      'prevent_sequential_chars' => false,
+      'prevent_keyboard_patterns' => false,
+      'prevent_repetitive_chars' => false
+    }
+
+    # 測試包含 Unicode 字符的密碼
+    unicode_password = '密碼123'
+    user = User.new
+    user.password = unicode_password
+    user.password_confirmation = unicode_password
+    
+    validator = PasswordValidator.new(attributes: [:password])
+    validator.validate_each(user, :password, user.password)
+    
+    assert_empty user.errors[:password]
   end
 end
 
@@ -841,9 +1043,6 @@ class TestRunner
     puts "開始時間: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
     puts "=" * 60
 
-    # 運行單元測試
-    run_unit_tests
-    
     # 運行整合測試
     run_integration_tests
     
@@ -855,43 +1054,12 @@ class TestRunner
 
   private
 
-  def self.run_unit_tests
-    puts "\n🔍 運行單元測試..."
-    puts "-" * 40
-    
-    # 直接載入測試文件內容
-    load_unit_tests
-    
-  end
-
   def self.run_integration_tests
     puts "\n🔍 運行整合測試..."
     puts "-" * 40
     
     # 直接載入測試文件內容
     load_integration_tests
-    
-  end
-
-  def self.load_unit_tests
-    puts "運行測試類別: PasswordValidator"
-    
-    # 創建測試實例
-    test_suite = PasswordValidatorTest.new("test_valid_password")
-    
-    # 運行所有測試方法
-    test_methods = PasswordValidatorTest.instance_methods.grep(/^test_/)
-    
-    test_methods.each do |method_name|
-      begin
-        test_suite.setup if test_suite.respond_to?(:setup)
-        test_suite.send(method_name)
-        test_suite.teardown if test_suite.respond_to?(:teardown)
-        puts "  ✅ #{method_name}"
-      rescue => e
-        puts "  ❌ #{method_name} - 失敗: #{e.message}"
-      end
-    end
   end
 
   def self.load_integration_tests

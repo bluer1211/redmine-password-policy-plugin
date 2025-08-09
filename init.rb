@@ -13,6 +13,7 @@ Redmine::Plugin.register :password_policy do
   
   # 設定設定頁面
   settings default: {
+    'enabled' => true,
     'min_length' => 8,
     'require_uppercase' => true,
     'require_lowercase' => true,
@@ -31,13 +32,38 @@ Rails.configuration.to_prepare do
     # 載入插件組件
     require File.expand_path('../lib/password_policy_hooks', __FILE__)
     require File.expand_path('../app/models/password_validator', __FILE__)
+    require File.expand_path('../lib/password_policy_utils', __FILE__)
     
     # 初始化鉤子
     PasswordPolicyHooks::Hooks.after_plugins_loaded
+    
+    # 驗證插件設定
+    validate_plugin_settings
     
     Rails.logger.info "Password Policy Plugin: 插件初始化完成"
   rescue => e
     Rails.logger.error "Password Policy Plugin: 初始化失敗 - #{e.message}"
     Rails.logger.error e.backtrace.join("\n")
   end
+end
+
+# 新增：驗證插件設定
+def validate_plugin_settings
+  settings = Setting.plugin_password_policy
+  return unless settings
+  
+  # 使用新的配置驗證器
+  errors = PasswordPolicyUtils::ConfigValidator.validate_config(settings)
+  
+  if errors.any?
+    Rails.logger.warn "Password Policy Plugin: 配置驗證發現問題: #{errors.join(', ')}"
+    # 清理配置
+    cleaned_settings = PasswordPolicyUtils::ConfigValidator.clean_config(settings)
+    Setting.plugin_password_policy = cleaned_settings
+    Rails.logger.info "Password Policy Plugin: 配置已自動清理"
+  end
+  
+  Rails.logger.info "Password Policy Plugin: 設定驗證完成"
+rescue => e
+  Rails.logger.error "Password Policy Plugin: 設定驗證失敗 - #{e.message}"
 end 

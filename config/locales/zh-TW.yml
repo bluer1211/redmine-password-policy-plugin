@@ -1,8 +1,10 @@
 zh-TW:
   label_password_policy: "密碼政策"
+  label_general_settings: "一般設定"
   label_password_requirements: "密碼要求"
   label_password_restrictions: "密碼限制"
   
+  label_enable_password_policy: "啟用密碼政策"
   label_minimum_length: "最小長度"
   label_require_uppercase: "必須包含大寫字母"
   label_require_lowercase: "必須包含小寫字母"
@@ -14,6 +16,7 @@ zh-TW:
   label_prevent_keyboard_patterns: "防止使用連續鍵盤位置字符"
   label_prevent_repetitive_chars: "防止使用重複字符"
   
+  text_enable_password_policy_info: "啟用或停用密碼政策功能。停用時，將不會進行密碼驗證。"
   text_minimum_length_info: "設定密碼的最小字符數"
   text_password_policy_help: "密碼政策用於確保用戶設定安全的密碼，避免帳號遭有心人士不當使用。"
   
@@ -28,6 +31,20 @@ zh-TW:
   contains_keyboard_patterns: "密碼不能包含連續鍵盤位置字符（如1qaz2wsx、#EDC$RFV等）"
   contains_repetitive_chars: "密碼不能包含重複字符（如aaa、111等）"
   is_common_password: "不能使用常見的密碼"
+  
+  # 詳細錯誤訊息和改進建議
+  detailed_error_messages:
+    too_short: "密碼長度不足。建議：使用至少8個字符的密碼"
+    too_long: "密碼長度過長。建議：使用不超過1000個字符的密碼"
+    must_contain_uppercase: "密碼必須包含大寫字母。建議：添加至少一個大寫字母（如A-Z）"
+    must_contain_lowercase: "密碼必須包含小寫字母。建議：添加至少一個小寫字母（如a-z）"
+    must_contain_numbers: "密碼必須包含數字。建議：添加至少一個數字（如0-9）"
+    must_contain_special_chars: "密碼必須包含特殊字符。建議：添加至少一個特殊字符（如!@#$%^&*）"
+    contains_sequential_chars: "密碼不能包含連續字符。建議：避免使用123456、abcdef等連續字符"
+    contains_keyboard_patterns: "密碼不能包含鍵盤模式。建議：避免使用1qaz2wsx等鍵盤位置模式"
+    contains_repetitive_chars: "密碼不能包含重複字符。建議：避免使用aaa、111等重複字符"
+    is_common_password: "不能使用常見密碼。建議：選擇更獨特和複雜的密碼"
+    validation_error: "密碼驗證失敗。建議：使用包含大小寫字母、數字和特殊字符的複雜密碼"
   
   # ActiveRecord 錯誤訊息
   activerecord:
