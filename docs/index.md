@@ -33,13 +33,20 @@ git clone https://github.com/bluer1211/redmine-password-policy-plugin.git passwo
 - **字符類型要求**：大寫字母、小寫字母、數字、特殊字符
 - **安全防護**：防止常見密碼、連續字符、鍵盤模式、重複字符
 - **多語言支援**：繁體中文和英文
+- **密碼強度計算**：1-5級強度評估
+- **完整的測試覆蓋**：單元測試和整合測試
 
 ## 📚 文檔
 
-- [安裝指南](installation.md)
-- [配置說明](configuration.md)
-- [安全指南](security.md)
-- [貢獻指南](contributing.md)
+### 用戶指南
+- [安裝指南](installation.md) - 詳細的安裝和配置說明
+- [配置說明](configuration.md) - 密碼政策配置指南
+- [故障排除](troubleshooting.md) - 常見問題和解決方案
+
+### 開發者文檔
+- [API 文檔](api.md) - 完整的 API 參考和範例
+- [安全指南](security.md) - 安全最佳實踐
+- [貢獻指南](contributing.md) - 開發和貢獻指南
 
 ## 🤝 貢獻
 
