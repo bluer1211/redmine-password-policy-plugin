@@ -4,6 +4,11 @@
 [![Ruby Version](https://img.shields.io/badge/Ruby-3.0+-blue.svg)](https://ruby-lang.org)
 [![Rails Version](https://img.shields.io/badge/Rails-6.0+-green.svg)](https://rubyonrails.org)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![GitHub release](https://img.shields.io/github/v/release/bluer1211/redmine-password-policy-plugin.svg)](https://github.com/bluer1211/redmine-password-policy-plugin/releases)
+[![GitHub stars](https://img.shields.io/github/stars/bluer1211/redmine-password-policy-plugin.svg)](https://github.com/bluer1211/redmine-password-policy-plugin/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/bluer1211/redmine-password-policy-plugin.svg)](https://github.com/bluer1211/redmine-password-policy-plugin/network)
+[![GitHub issues](https://img.shields.io/github/issues/bluer1211/redmine-password-policy-plugin.svg)](https://github.com/bluer1211/redmine-password-policy-plugin/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/bluer1211/redmine-password-policy-plugin.svg)](https://github.com/bluer1211/redmine-password-policy-plugin/pulls)
 
 這個插件為 Redmine 6.0.6+ 提供強大的密碼政策功能，幫助管理員強制執行安全的密碼規則，避免帳號遭有心人士不當使用。
 

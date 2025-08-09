@@ -1,0 +1,54 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.0'
+        
+    - name: Install dependencies
+      run: |
+        gem install bundler
+        bundle install
+        
+    - name: Generate documentation
+      run: |
+        # 創建文檔目錄
+        mkdir -p docs
+        
+        # 複製 README 作為主頁
+        cp README.md docs/index.md
+        
+        # 創建文檔結構
+        echo "# Redmine Password Policy Plugin Documentation" > docs/documentation.md
+        echo "" >> docs/documentation.md
+        echo "## Table of Contents" >> docs/documentation.md
+        echo "" >> docs/documentation.md
+        echo "- [Installation](installation.md)" >> docs/documentation.md
+        echo "- [Configuration](configuration.md)" >> docs/documentation.md
+        echo "- [Security](security.md)" >> docs/documentation.md
+        echo "- [Contributing](contributing.md)" >> docs/documentation.md
+        
+        # 複製其他文檔
+        cp SECURITY.md docs/security.md
+        cp CONTRIBUTING.md docs/contributing.md
+        
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs
