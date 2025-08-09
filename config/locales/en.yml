@@ -30,6 +30,7 @@ en:
   
   # Error messages
   too_short: "Password is too short (minimum is %{count} characters)"
+  too_long: "Password is too long (maximum is %{count} characters)"
   must_contain_uppercase: "Password must contain at least one uppercase letter"
   must_contain_lowercase: "Password must contain at least one lowercase letter"
   must_contain_numbers: "Password must contain at least one number"
@@ -51,6 +52,7 @@ en:
           attributes:
             password:
               too_short: "Password is too short (minimum is %{count} characters)"
+              too_long: "Password is too long (maximum is %{count} characters)"
               must_contain_uppercase: "Password must contain at least one uppercase letter"
               must_contain_lowercase: "Password must contain at least one lowercase letter"
               must_contain_numbers: "Password must contain at least one number"

@@ -19,6 +19,7 @@ zh-TW:
   
   # 錯誤訊息
   too_short: "密碼長度不足，至少需要 %{count} 個字符"
+  too_long: "密碼長度過長，最多只能 %{count} 個字符"
   must_contain_uppercase: "密碼必須包含至少一個大寫字母"
   must_contain_lowercase: "密碼必須包含至少一個小寫字母"
   must_contain_numbers: "密碼必須包含至少一個數字"
@@ -36,6 +37,7 @@ zh-TW:
           attributes:
             password:
               too_short: "密碼長度不足，至少需要 %{count} 個字符"
+              too_long: "密碼長度過長，最多只能 %{count} 個字符"
               must_contain_uppercase: "密碼必須包含至少一個大寫字母"
               must_contain_lowercase: "密碼必須包含至少一個小寫字母"
               must_contain_numbers: "密碼必須包含至少一個數字"

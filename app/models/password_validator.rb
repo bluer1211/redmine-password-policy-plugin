@@ -1,6 +1,48 @@
 class PasswordValidator < ActiveModel::EachValidator
+  # 靜態資料定義為類別常數，提升效能
+  SEQUENTIAL_PATTERNS = [
+    '1234567890', '0987654321', 'abcdefghijklmnopqrstuvwxyz',
+    'zyxwvutsrqponmlkjihgfedcba', 'qwertyuiop', 'asdfghjkl',
+    'zxcvbnm', '1qaz2wsx3edc4rfv5tgb6yhn7ujm8ik9ol0p'
+  ].freeze
+
+  KEYBOARD_PATTERNS = [
+    # QWERTY 鍵盤常見模式
+    '1qaz2wsx', '2wsx3edc', '3edc4rfv', '4rfv5tgb', '5tgb6yhn', '6yhn7ujm', '7ujm8ik9', '8ik9ol0p',
+    'qaz2wsx3', 'wsx3edc4', 'edc4rfv5', 'rfv5tgb6', 'tgb6yhn7', 'yhn7ujm8', 'ujm8ik9o', 'ik9ol0p',
+    '1qaz2wsx3edc4rfv5tgb6yhn7ujm8ik9ol0p',
+    # 反向模式
+    'p0lo9ki8mju7nhy6bgt5vfr4cde3xsw2zaq1',
+    '0p9o8i7u6y5t4r3e2w1q',
+    # 數字鍵盤模式
+    '123456789', '987654321',
+    # 特殊字符鍵盤模式
+    '!qaz@wsx#edc$rfv%tgb^yhn&ujm*ik(ol)p',
+    '!@#$%^&*()',
+    ')(*&^%$#@!',
+    # 混合模式
+    '1qaz@wsx#edc$rfv%tgb^yhn&ujm*ik(ol)p',
+    'q1w2e3r4t5y6u7i8o9p0',
+    'p0o9i8u7y6t5r4e3w2q1'
+  ].freeze
+
+  COMMON_PASSWORDS = [
+    'password', '123456', '123456789', 'qwerty', 'abc123',
+    'password123', 'admin', 'letmein', 'welcome', 'monkey',
+    'redmine', 'redmine123', 'admin123', 'user123', 'test123'
+  ].freeze
+
   def validate_each(record, attribute, value)
     return if value.blank?
+    
+    # 安全性檢查：確保輸入是字串
+    value = value.to_s.strip
+    
+    # 檢查輸入長度限制（防止過長輸入）
+    if value.length > 1000
+      record.errors.add(attribute, :too_long, count: 1000)
+      return
+    end
     
     settings = Setting.plugin_password_policy
     return unless settings # 如果沒有設定，跳過驗證
@@ -32,13 +74,7 @@ class PasswordValidator < ActiveModel::EachValidator
     
     # 檢查連續字符
     if settings['prevent_sequential_chars']
-      sequential_patterns = [
-        '1234567890', '0987654321', 'abcdefghijklmnopqrstuvwxyz',
-        'zyxwvutsrqponmlkjihgfedcba', 'qwertyuiop', 'asdfghjkl',
-        'zxcvbnm', '1qaz2wsx3edc4rfv5tgb6yhn7ujm8ik9ol0p'
-      ]
-      
-      sequential_patterns.each do |pattern|
+      SEQUENTIAL_PATTERNS.each do |pattern|
         if value.downcase.include?(pattern.downcase)
           record.errors.add(attribute, :contains_sequential_chars)
           break
@@ -48,27 +84,7 @@ class PasswordValidator < ActiveModel::EachValidator
     
     # 檢查連續鍵盤位置字符
     if settings['prevent_keyboard_patterns']
-      keyboard_patterns = [
-        # QWERTY 鍵盤常見模式
-        '1qaz2wsx', '2wsx3edc', '3edc4rfv', '4rfv5tgb', '5tgb6yhn', '6yhn7ujm', '7ujm8ik9', '8ik9ol0p',
-        'qaz2wsx3', 'wsx3edc4', 'edc4rfv5', 'rfv5tgb6', 'tgb6yhn7', 'yhn7ujm8', 'ujm8ik9o', 'ik9ol0p',
-        '1qaz2wsx3edc4rfv5tgb6yhn7ujm8ik9ol0p',
-        # 反向模式
-        'p0lo9ki8mju7nhy6bgt5vfr4cde3xsw2zaq1',
-        '0p9o8i7u6y5t4r3e2w1q',
-        # 數字鍵盤模式
-        '123456789', '987654321',
-        # 特殊字符鍵盤模式
-        '!qaz@wsx#edc$rfv%tgb^yhn&ujm*ik(ol)p',
-        '!@#$%^&*()',
-        ')(*&^%$#@!',
-        # 混合模式
-        '1qaz@wsx#edc$rfv%tgb^yhn&ujm*ik(ol)p',
-        'q1w2e3r4t5y6u7i8o9p0',
-        'p0o9i8u7y6t5r4e3w2q1'
-      ]
-      
-      keyboard_patterns.each do |pattern|
+      KEYBOARD_PATTERNS.each do |pattern|
         if value.downcase.include?(pattern.downcase)
           record.errors.add(attribute, :contains_keyboard_patterns)
           break
@@ -85,12 +101,7 @@ class PasswordValidator < ActiveModel::EachValidator
     
     # 檢查常見密碼
     if settings['prevent_common_passwords']
-      common_passwords = [
-        'password', '123456', '123456789', 'qwerty', 'abc123',
-        'password123', 'admin', 'letmein', 'welcome', 'monkey'
-      ]
-      
-      if common_passwords.include?(value.downcase)
+      if COMMON_PASSWORDS.include?(value.downcase)
         record.errors.add(attribute, :is_common_password)
       end
     end

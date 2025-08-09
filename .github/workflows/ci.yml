@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        ruby-version: ['3.0', '3.1', '3.2', '3.3']
+        redmine-version: ['6.0.6', '6.1.0']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Ruby ${{ matrix.ruby-version }}
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby-version }}
+        bundler-cache: true
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install Redmine ${{ matrix.redmine-version }}
+      run: |
+        wget https://www.redmine.org/releases/redmine-${{ matrix.redmine-version }}.tar.gz
+        tar -xzf redmine-${{ matrix.redmine-version }}.tar.gz
+        cd redmine-${{ matrix.redmine-version }}
+        cp config/database.yml.example config/database.yml
+        echo "production:" >> config/database.yml
+        echo "  adapter: sqlite3" >> config/database.yml
+        echo "  database: db/production.sqlite3" >> config/database.yml
+        bundle install
+
+    - name: Copy plugin
+      run: |
+        cp -r . redmine-${{ matrix.redmine-version }}/plugins/password_policy
+
+    - name: Run tests
+      run: |
+        cd redmine-${{ matrix.redmine-version }}
+        bundle exec rake test:plugins:password_policy
+
+    - name: Run RuboCop
+      run: |
+        cd redmine-${{ matrix.redmine-version }}
+        bundle exec rubocop plugins/password_policy
+
+  security:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Run security scan
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ruby
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
