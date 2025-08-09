@@ -1,0 +1,61 @@
+# Jekyll 配置
+theme: jekyll-theme-cayman
+title: Redmine Password Policy Plugin
+description: 強大的 Redmine 密碼政策插件，幫助管理員強制執行安全的密碼規則
+url: "https://bluer1211.github.io"
+baseurl: "/redmine-password-policy-plugin"
+
+# 作者信息
+author:
+  name: Jason Liu (bluer1211)
+  email: bluer1211@gmail.com
+  url: https://github.com/bluer1211
+
+# 社交媒體
+social:
+  github: bluer1211
+
+# 導航
+nav:
+  - title: 首頁
+    url: /
+  - title: 安裝指南
+    url: /installation.html
+  - title: 配置說明
+    url: /configuration.html
+  - title: 安全指南
+    url: /security.html
+  - title: 貢獻指南
+    url: /contributing.html
+
+# 插件
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# 排除文件
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+
+# 包含文件
+include:
+  - _pages
+
+# 默認佈局
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "page"
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: "post"

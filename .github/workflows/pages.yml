@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -47,8 +56,19 @@ jobs:
         cp SECURITY.md docs/security.md
         cp CONTRIBUTING.md docs/contributing.md
         
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
+        # 創建 _config.yml 用於 Jekyll
+        echo "theme: jekyll-theme-cayman" > docs/_config.yml
+        echo "title: Redmine Password Policy Plugin" >> docs/_config.yml
+        echo "description: 強大的 Redmine 密碼政策插件" >> docs/_config.yml
+        
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./docs
+        path: './docs'
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
