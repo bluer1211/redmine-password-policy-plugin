@@ -3,7 +3,7 @@
 ## 插件信息
 
 - **名稱**: Password Policy Plugin
-- **版本**: 2.0.0
+- **版本**: 2.1.0
 - **作者**: Jason Liu (bluer1211)
 - **授權**: MIT
 - **GitHub**: https://github.com/bluer1211/redmine-password-policy-plugin

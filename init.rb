@@ -4,7 +4,7 @@ Redmine::Plugin.register :password_policy do
   name 'Password Policy Plugin'
   author 'Jason Liu (bluer1211)'
   description 'Enforces password policy rules for Redmine users'
-  version '2.0.0'
+  version '2.1.0'
   url 'https://github.com/bluer1211/redmine-password-policy-plugin'
   author_url 'https://github.com/bluer1211'
   
