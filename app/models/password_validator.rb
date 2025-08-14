@@ -7,23 +7,49 @@ class PasswordValidator < ActiveModel::EachValidator
   ].freeze
 
   KEYBOARD_PATTERNS = [
-    # QWERTY 鍵盤常見模式
+    # QWERTY 鍵盤常見模式（完整和部分）
     '1qaz2wsx', '2wsx3edc', '3edc4rfv', '4rfv5tgb', '5tgb6yhn', '6yhn7ujm', '7ujm8ik9', '8ik9ol0p',
     'qaz2wsx3', 'wsx3edc4', 'edc4rfv5', 'rfv5tgb6', 'tgb6yhn7', 'yhn7ujm8', 'ujm8ik9o', 'ik9ol0p',
     '1qaz2wsx3edc4rfv5tgb6yhn7ujm8ik9ol0p',
+    
+    # 部分鍵盤模式（4-6字符）
+    '1qaz', '2wsx', '3edc', '4rfv', '5tgb', '6yhn', '7ujm', '8ik9', '9ol0', '0p',
+    'qaz2', 'wsx3', 'edc4', 'rfv5', 'tgb6', 'yhn7', 'ujm8', 'ik9o', 'lo0p',
+    '1qaz2', '2wsx3', '3edc4', '4rfv5', '5tgb6', '6yhn7', '7ujm8', '8ik9o', '9ol0p',
+    'qaz2w', 'wsx3e', 'edc4r', 'rfv5t', 'tgb6y', 'yhn7u', 'ujm8i', 'ik9ol',
+    
     # 反向模式
     'p0lo9ki8mju7nhy6bgt5vfr4cde3xsw2zaq1',
-    '0p9o8i7u6y5t4r3e2w1q',
+    '0p9o8i7u6y5t4r3e2w1q', 'p0o9i8u7y6t5r4e3w2q1',
+    
     # 數字鍵盤模式
-    '123456789', '987654321',
+    '123456789', '987654321', '12345678', '87654321',
+    '1234567', '7654321', '123456', '654321',
+    
+    # 數字鍵盤橫向模式
+    '147', '741', '258', '852', '369', '963',
+    '147258369', '963852741',
+    
     # 特殊字符鍵盤模式
     '!qaz@wsx#edc$rfv%tgb^yhn&ujm*ik(ol)p',
-    '!@#$%^&*()',
-    ')(*&^%$#@!',
+    '!@#$%^&*()', ')(*&^%$#@!',
+    '!@#', '#@!', '$%^', '^%$', '&*()', ')(*&',
+    
     # 混合模式
     '1qaz@wsx#edc$rfv%tgb^yhn&ujm*ik(ol)p',
-    'q1w2e3r4t5y6u7i8o9p0',
-    'p0o9i8u7y6t5r4e3w2q1'
+    'q1w2e3r4t5y6u7i8o9p0', 'p0o9i8u7y6t5r4e3w2q1',
+    
+    # 字母鍵盤模式
+    'qwerty', 'ytrewq', 'asdfgh', 'hgfdsa', 'zxcvbn', 'nbvcxz',
+    'qwertyuiop', 'poiuytrewq', 'asdfghjkl', 'lkjhgfdsa',
+    
+    # 常見組合
+    'qwe', 'ewq', 'asd', 'dsa', 'zxc', 'cxz',
+    'qweasd', 'dsaewq', 'asdzxc', 'cxzdsa',
+    
+    # 大小寫混合模式
+    'QWE', 'EWQ', 'ASD', 'DSA', 'ZXC', 'CXZ',
+    'Qwe', 'Ewq', 'Asd', 'Dsa', 'Zxc', 'Cxz'
   ].freeze
 
   COMMON_PASSWORDS = [
@@ -99,6 +125,12 @@ class PasswordValidator < ActiveModel::EachValidator
   end
 
   def perform_validations(record, attribute, value, settings)
+    # 檢查插件是否啟用
+    if !(settings['enabled'].to_s == 'true' || settings['enabled'].to_s == '1')
+      Rails.logger.debug "Password Policy Plugin is disabled, skipping validation"
+      return
+    end
+    
     # 檢查最小長度
     if settings['min_length'].to_i > 0 && value.length < settings['min_length'].to_i
       record.errors.add(attribute, :too_short, count: settings['min_length'])
@@ -167,9 +199,72 @@ class PasswordValidator < ActiveModel::EachValidator
     SEQUENTIAL_PATTERNS.any? { |pattern| value_downcase.include?(pattern.downcase) }
   end
 
+  # 動態檢測鍵盤模式
+  def contains_dynamic_keyboard_patterns?(value)
+    value_downcase = value.downcase
+    
+    # 檢測連續的鍵盤位置字符
+    keyboard_rows = [
+      '1234567890',
+      'qwertyuiop',
+      'asdfghjkl',
+      'zxcvbnm'
+    ]
+    
+    # 檢查每個鍵盤行
+    keyboard_rows.each do |row|
+      # 檢查正向和反向的連續字符（3-6字符）
+      (3..6).each do |length|
+        (0..row.length - length).each do |start|
+          pattern = row[start, length]
+          reverse_pattern = pattern.reverse
+          
+          if value_downcase.include?(pattern) || value_downcase.include?(reverse_pattern)
+            return true
+          end
+        end
+      end
+    end
+    
+    # 檢測數字鍵盤模式
+    numpad_patterns = [
+      '147', '258', '369', '741', '852', '963',
+      '147258369', '963852741'
+    ]
+    
+    numpad_patterns.each do |pattern|
+      if value_downcase.include?(pattern)
+        return true
+      end
+    end
+    
+    false
+  end
+
   def contains_keyboard_patterns?(value)
     value_downcase = value.downcase
-    KEYBOARD_PATTERNS.any? { |pattern| value_downcase.include?(pattern.downcase) }
+    
+    # 1. 檢查預定義模式
+    if KEYBOARD_PATTERNS.any? { |pattern| value_downcase.include?(pattern.downcase) }
+      return true
+    end
+    
+    # 2. 動態檢測鍵盤模式
+    if contains_dynamic_keyboard_patterns?(value_downcase)
+      return true
+    end
+    
+    # 3. 檢測特殊字符鍵盤模式
+    symbol_patterns = [
+      '!@#', '#@!', '$%^', '^%$', '&*()', ')(*&',
+      '!@#$%^&*()', ')(*&^%$#@!'
+    ]
+    
+    if symbol_patterns.any? { |pattern| value.include?(pattern) }
+      return true
+    end
+    
+    false
   end
 
   # 計算密碼強度（1-5級）

@@ -70,7 +70,7 @@ module PasswordPolicyUtils
         when :contains_sequential_chars
           suggestions << "避免使用連續字符（如123456、abcdef）"
         when :contains_keyboard_patterns
-          suggestions << "避免使用鍵盤模式（如1qaz2wsx）"
+          suggestions << "避免使用鍵盤位置模式（如1qaz、WSX、3edc、147、qwe等）。這些模式容易被猜測。"
         when :contains_repetitive_chars
           suggestions << "避免使用重複字符（如aaa、111）"
         when :is_common_password

@@ -1,0 +1,38 @@
+密碼政策插件測試報告
+==================================================
+生成時間: 2025-08-14 08:56:04
+測試環境: Ruby 2.6.10 (universal.x86_64-darwin24)
+
+測試統計:
+  總測試數: 21
+  通過測試: 21
+  失敗測試: 0
+  成功率: 100.0%
+
+詳細結果:
+  ✅ test_config_validator_enabled_method (0.02ms)
+  ✅ test_password_too_long (0.11ms)
+  ✅ test_user_registration_with_weak_password (0.05ms)
+  ✅ test_password_with_unicode_characters (0.04ms)
+  ✅ test_user_registration_with_strong_password (0.04ms)
+  ✅ test_password_change_with_weak_password (0.01ms)
+  ✅ test_password_change_with_strong_password (0.05ms)
+  ✅ test_password_strength_calculation (0.04ms)
+  ✅ test_password_strength_description (0.01ms)
+  ✅ test_plugin_disabled_skips_validation (0.02ms)
+  ✅ test_plugin_enabled_performs_validation (0.02ms)
+  ✅ test_detailed_error_messages (0.03ms)
+  ✅ test_settings_validation (0.02ms)
+  ✅ test_performance_optimizations (0.01ms)
+  ✅ test_contains_sequential_chars_method (0.01ms)
+  ✅ test_contains_keyboard_patterns_method (0.07ms)
+  ✅ test_enhanced_keyboard_pattern_detection (0.33ms)
+  ✅ test_dynamic_keyboard_pattern_detection (0.36ms)
+  ✅ test_strength_evaluator (0.02ms)
+  ✅ test_suggestion_generator (0.01ms)
+  ✅ test_config_validator (0.06ms)
+
+效能統計:
+  平均執行時間: 0.06ms
+  最長執行時間: 0.36ms
+  最短執行時間: 0.01ms
