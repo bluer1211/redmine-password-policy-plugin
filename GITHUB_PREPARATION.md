@@ -85,8 +85,8 @@
 ### 🚀 GitHub 發布準備
 
 #### 1. 創建 Release
-- [ ] 標籤版本：v2.1.0
-- [ ] 發布標題：Password Policy Plugin v2.1.0
+- [ ] 標籤版本：v2.1.1
+- [ ] 發布標題：Password Policy Plugin v2.1.1
 - [ ] 發布說明：
   ```
   ## 🎉 新版本發布
@@ -127,7 +127,7 @@
 git add .
 
 # 提交變更
-git commit -m "feat: prepare for GitHub release v2.1.0
+git commit -m "feat: prepare for GitHub release v2.1.1
 
 - Update README.md with professional GitHub format
 - Improve plugin documentation and structure
@@ -139,11 +139,11 @@ git commit -m "feat: prepare for GitHub release v2.1.0
 Closes #1"
 
 # 創建標籤
-git tag -a v2.1.0 -m "Release version 2.1.0"
+git tag -a v2.1.1 -m "Release version 2.1.1"
 
 # 推送到 GitHub
 git push origin main
-git push origin v2.1.0
+git push origin v2.1.1
 ```
 
 ### ✅ 最終檢查清單
@@ -176,7 +176,7 @@ git push origin v2.1.0
 
 - **準備完成**：2025-08-21
 - **GitHub 發布**：2025-08-21
-- **版本標籤**：v2.1.0
+- **版本標籤**：v2.1.1
 - **下次更新**：根據用戶反饋
 
 ---
