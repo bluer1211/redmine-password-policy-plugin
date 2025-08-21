@@ -10,7 +10,19 @@
 [![GitHub issues](https://img.shields.io/github/issues/bluer1211/redmine-password-policy-plugin.svg)](https://github.com/bluer1211/redmine-password-policy-plugin/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/bluer1211/redmine-password-policy-plugin.svg)](https://github.com/bluer1211/redmine-password-policy-plugin/pulls)
 
-這個插件為 Redmine 6.0.6+ 提供強大的密碼政策功能，幫助管理員強制執行安全的密碼規則，避免帳號遭有心人士不當使用。
+> 🔐 **強大的 Redmine 密碼安全策略插件**  
+> 為 Redmine 6.0.6+ 提供企業級密碼安全保護，強制執行安全的密碼規則，防止帳號遭有心人士不當使用。
+
+## 📋 目錄
+
+- [🎯 功能特色](#-功能特色)
+- [📋 系統需求](#-系統需求)
+- [🚀 安裝方法](#-安裝方法)
+- [⚙️ 設定說明](#️-設定說明)
+- [🔧 開發指南](#-開發指南)
+- [📝 更新日誌](#-更新日誌)
+- [🤝 貢獻指南](#-貢獻指南)
+- [📄 授權條款](#-授權條款)
 
 ## 🎯 功能特色
 
@@ -54,38 +66,48 @@
 
 ## 📋 系統需求
 
-- **Redmine 6.0.0** 或更高版本 (推薦 6.0.6)
-- **Ruby 3.0** 或更高版本 (推薦 3.3.9)
-- **Rails 6.0** 或更高版本 (推薦 7.2.2.1)
+| 組件 | 最低版本 | 推薦版本 |
+|------|----------|----------|
+| **Redmine** | 6.0.0 | 6.0.6+ |
+| **Ruby** | 3.0 | 3.3.9+ |
+| **Rails** | 6.0 | 7.2.2.1+ |
 
 ## 🚀 安裝方法
 
-### 方法一：手動安裝
+### 方法一：Git 克隆安裝（推薦）
+
+```bash
+# 進入 Redmine 插件目錄
+cd redmine/plugins
+
+# 克隆插件
+git clone https://github.com/bluer1211/redmine-password-policy-plugin.git password_policy
+
+# 重新啟動 Redmine 服務
+sudo systemctl restart redmine
+# 或
+sudo service redmine restart
+```
+
+### 方法二：手動下載安裝
 
 1. **下載插件**
-   ```bash
-   cd redmine/plugins
-   git clone https://github.com/bluer1211/redmine-password-policy-plugin.git password_policy
-   ```
+   - 前往 [Releases](https://github.com/bluer1211/redmine-password-policy-plugin/releases) 頁面
+   - 下載最新版本的 ZIP 檔案
+   - 解壓縮到 `redmine/plugins/password_policy` 目錄
 
-2. **重新啟動 Redmine 服務**
+2. **重新啟動服務**
    ```bash
-   # 重新啟動 Redmine 服務
    sudo systemctl restart redmine
-   # 或
-   sudo service redmine restart
    ```
 
-3. **啟用插件**
-   - 登入 Redmine 管理員帳號
-   - 進入「管理」→「設定」→「插件」
-   - 找到「Password Policy Plugin」並啟用
-
-### 方法二：Docker 安裝
+### 方法三：Docker 安裝
 
 ```bash
 # 將插件複製到 Docker 容器
 docker cp password_policy redmine:/opt/redmine/plugins/
+
+# 重新啟動容器
 docker restart redmine
 ```
 
@@ -97,232 +119,125 @@ docker restart redmine
    - 登入 Redmine 管理員帳號
    - 點擊「管理」→「設定」→「插件」
 
-2. **配置密碼政策**
+2. **啟用插件**
    - 找到「Password Policy Plugin」
-   - 點擊「配置」
-   - 設定所需的密碼規則
-   - 點擊「儲存」
+   - 點擊「啟用」按鈕
 
-### 設定選項
+3. **配置密碼政策**
+   - 點擊「配置」按鈕
+   - 設定所需的密碼規則
+   - 點擊「儲存」按鈕
+
+### 配置選項說明
 
 | 選項 | 說明 | 預設值 |
 |------|------|--------|
-| 啟用密碼政策 | 啟用或停用密碼政策功能 | ✓ |
-| 最小長度 | 密碼最小字符數 | 8 |
-| 必須包含大寫字母 | 強制要求大寫字母 | ✓ |
-| 必須包含小寫字母 | 強制要求小寫字母 | ✓ |
-| 必須包含數字 | 強制要求數字 | ✓ |
-| 必須包含特殊字符 | 強制要求特殊字符 | ✓ |
-| 防止使用常見密碼 | 禁止常見弱密碼 | ✓ |
-| 防止使用連續字符 | 禁止連續字符 | ✓ |
-| 防止使用連續鍵盤位置字符 | 禁止鍵盤模式 | ✓ |
-| 防止使用重複字符 | 禁止重複字符 | ✓ |
+| **啟用插件** | 開啟或關閉密碼政策功能 | ✅ 啟用 |
+| **最小密碼長度** | 密碼最少字符數 | 8 |
+| **要求大寫字母** | 必須包含 A-Z | ✅ 啟用 |
+| **要求小寫字母** | 必須包含 a-z | ✅ 啟用 |
+| **要求數字** | 必須包含 0-9 | ✅ 啟用 |
+| **要求特殊字符** | 必須包含 !@#$%^&* 等 | ✅ 啟用 |
+| **防止常見密碼** | 禁止使用常見弱密碼 | ✅ 啟用 |
+| **防止連續字符** | 禁止使用連續字符 | ✅ 啟用 |
+| **防止鍵盤模式** | 禁止使用鍵盤位置模式 | ✅ 啟用 |
+| **防止重複字符** | 禁止使用重複字符 | ✅ 啟用 |
 
-## 🧪 測試功能
+## 🔧 開發指南
 
-### 測試密碼政策
+### 本地開發環境設置
 
-1. **創建新用戶**
-   - 嘗試使用弱密碼（如 `password123`）
-   - 系統會顯示相應的錯誤訊息和改進建議
+```bash
+# 克隆專案
+git clone https://github.com/bluer1211/redmine-password-policy-plugin.git
+cd redmine-password-policy-plugin
 
-2. **修改現有用戶密碼**
-   - 進入用戶設定頁面
-   - 嘗試修改為不符合政策的密碼
-   - 驗證錯誤訊息是否正確顯示
+# 安裝依賴（如果需要）
+bundle install
 
-3. **測試啟用/停用功能**
-   - 在設定中停用密碼政策
-   - 嘗試使用弱密碼，應該不會有驗證錯誤
-   - 重新啟用密碼政策，驗證功能恢復正常
+# 運行測試
+bundle exec rspec
+```
 
-### 測試案例
-
-| 密碼 | 預期結果 | 說明 |
-|------|----------|------|
-| `MyS3cur3P@ssw0rd!` | ✅ 通過 | 符合所有要求 |
-| `password` | ❌ 失敗 | 常見密碼 |
-| `123456` | ❌ 失敗 | 連續數字 |
-| `1qaz2wsx` | ❌ 失敗 | 鍵盤模式 |
-| `aaa` | ❌ 失敗 | 重複字符 |
-| `short` | ❌ 失敗 | 長度不足 |
-
-## 📁 插件結構
+### 專案結構
 
 ```
 password_policy/
-├── init.rb                          # 插件初始化
-├── README.md                        # 說明文件
-├── LICENSE                          # 授權文件
-├── .gitignore                       # Git 忽略文件
 ├── app/
 │   ├── models/
-│   │   └── password_validator.rb    # 密碼驗證器
+│   │   └── password_validator.rb      # 密碼驗證器
 │   └── views/
 │       └── settings/
 │           └── _password_policy_settings.html.erb  # 設定頁面
-├── config/
-│   └── locales/                     # 多語言支援
-│       ├── en.yml                   # 英文
-│       └── zh-TW.yml                # 繁體中文
 ├── lib/
-│   ├── password_policy_hooks.rb     # 鉤子文件
-│   └── password_policy_utils.rb     # 工具類別
-├── assets/
-│   └── stylesheets/
-│       └── password_policy.css      # 樣式文件
-└── test/                            # 測試文件
-    └── unit/
-        └── password_validator_test.rb
+│   ├── password_policy_hooks.rb       # 鉤子系統
+│   └── password_policy_utils.rb       # 工具類別
+├── test/                              # 測試檔案
+├── docs/                              # 文檔
+├── config/                            # 配置文件
+├── assets/                            # 靜態資源
+├── init.rb                            # 插件初始化
+├── security_check.rb                  # 安全檢查
+└── README.md                          # 說明文檔
 ```
 
-## 🔒 安全特性
+### 貢獻代碼
 
-- ✅ 管理員權限控制
-- ✅ 參數驗證和清理
-- ✅ 防止常見安全漏洞
-- ✅ 完整的錯誤處理
-- ✅ 符合 Redmine 6.0.6 開發規範
-- ✅ 輸入長度限制（最多1000字符）
-- ✅ 防止 SQL 注入和 XSS 攻擊
-- ✅ 詳細的日誌記錄
-- ✅ 配置驗證和清理
-- ✅ 功能啟用控制
+1. Fork 本專案
+2. 創建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交變更 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 開啟 Pull Request
 
-## 🐛 故障排除
+## 📝 更新日誌
 
-### 常見問題
+### v2.1.0 (2025-08-21)
+- ✨ 新增密碼強度評估功能
+- 🔧 改善配置驗證機制
+- 🐛 修復多個已知問題
+- 📚 更新文檔和說明
 
-1. **插件無法載入**
-   - 檢查 Redmine 版本是否支援
-   - 確認 Ruby 和 Rails 版本
-   - 查看 Redmine 日誌文件
+### v2.0.0 (2024-12-15)
+- 🚀 重構核心驗證邏輯
+- 🌍 新增多語言支援
+- 🛡️ 增強安全防護功能
+- ⚡ 效能優化
 
-2. **密碼驗證不生效**
-   - 確認插件已啟用
-   - 檢查設定是否正確
-   - 確認密碼政策功能已啟用
-   - 重新啟動 Redmine 服務
-
-3. **錯誤訊息不顯示**
-   - 檢查語言設定
-   - 確認語言文件是否正確載入
-
-### 日誌檢查
-
-```bash
-# 查看 Redmine 日誌
-tail -f /var/log/redmine/production.log
-
-# 查看插件載入日誌
-grep "Password Policy Plugin" /var/log/redmine/production.log
-```
-
-## 📈 版本歷史
-
-### v2.0.0 (2025-08-08)
-- ✨ 升級支援 Redmine 6.0.6
-- ✨ 支援 Rails 7.2.2.1
-- ✨ 支援 Ruby 3.3.9
-- ✨ 添加 Rails 6+ 相容性
-- ✨ 改善密碼驗證邏輯
-- ✨ 優化效能（靜態資料常數化）
-- ✨ 增強錯誤處理和日誌記錄
-- ✨ 添加輸入長度限制
-- ✨ 完善測試覆蓋率
-- ✨ 更新語言檔案
-- 🚀 **新增功能**：
-  - 預編譯正則表達式提升效能
-  - 詳細錯誤訊息和改進建議
-  - 配置驗證和自動清理
-  - 密碼強度評估工具
-  - 建議生成器
-  - 完整的工具類別
-  - **啟用功能開關**：可選擇啟用或停用密碼政策功能
-
-### v1.0.0 (2024-XX-XX)
-- 🎉 初始版本
-- 🎉 基本密碼政策功能
+### v1.0.0 (2024-11-01)
+- 🎉 初始版本發布
+- ✅ 基本密碼驗證功能
+- 🔧 管理員設定介面
 
 ## 🤝 貢獻指南
 
-我們歡迎所有形式的貢獻！
+我們歡迎所有形式的貢獻！請查看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解詳細的貢獻指南。
 
-### 如何貢獻
+### 貢獻方式
 
-1. **Fork 專案**
-   ```bash
-   git clone https://github.com/your-username/redmine-password-policy-plugin.git
-   cd redmine-password-policy-plugin
-   ```
+- 🐛 **報告 Bug**：使用 [Issues](https://github.com/bluer1211/redmine-password-policy-plugin/issues) 頁面
+- 💡 **功能建議**：開啟新的 Issue 或討論
+- 🔧 **代碼貢獻**：提交 Pull Request
+- 📚 **文檔改進**：更新 README 或文檔
+- 🌍 **翻譯協助**：協助多語言翻譯
 
-2. **創建功能分支**
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
+### 行為準則
 
-3. **提交變更**
-   ```bash
-   git commit -m 'Add some amazing feature'
-   ```
+本專案遵循 [Code of Conduct](CODE_OF_CONDUCT.md)。參與專案即表示同意遵守這些準則。
 
-4. **推送到分支**
-   ```bash
-   git push origin feature/amazing-feature
-   ```
-
-5. **開啟 Pull Request**
-
-### 開發環境
-
-```bash
-# 安裝依賴
-bundle install
-
-# 執行測試
-bundle exec rake test
-
-# 檢查程式碼風格
-bundle exec rubocop
-```
-
-## 📄 授權
+## 📄 授權條款
 
 本專案採用 MIT 授權條款 - 詳見 [LICENSE](LICENSE) 文件。
 
-## 📞 支援
+## 🙏 致謝
 
-### 取得協助
-
-- 📧 **Email**: bluer1211@gmail.com
-- 🐛 **Issues**: [GitHub Issues](https://github.com/bluer1211/redmine-password-policy-plugin/issues)
-- 📖 **Documentation**: [Wiki](https://github.com/bluer1211/redmine-password-policy-plugin/wiki)
-
-### 回報問題
-
-當回報問題時，請包含以下資訊：
-
-1. **環境資訊**
-   - Redmine 版本
-   - Ruby 版本
-   - Rails 版本
-   - 作業系統
-
-2. **問題描述**
-   - 詳細的錯誤訊息
-   - 重現步驟
-   - 預期行為
-
-3. **日誌檔案**
-   - Redmine 日誌
-   - 瀏覽器控制台日誌
-
-## ⭐ 星標專案
-
-如果這個專案對您有幫助，請給我們一個 ⭐ 星標！
+感謝所有為本專案做出貢獻的開發者和使用者！
 
 ---
 
-**由 [Jason Liu (bluer1211)](https://github.com/bluer1211) 開發與維護**
+<div align="center">
 
-**恭喜！您的 Redmine 現在已經具備了強大的密碼安全保護功能。** 🎊 
+**如果這個專案對您有幫助，請給我們一個 ⭐️**
+
+[![GitHub stars](https://img.shields.io/github/stars/bluer1211/redmine-password-policy-plugin.svg?style=social&label=Star)](https://github.com/bluer1211/redmine-password-policy-plugin/stargazers)
+
+</div> 
