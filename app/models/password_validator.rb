@@ -217,8 +217,8 @@ class PasswordValidator < ActiveModel::EachValidator
     
     # 檢查每個鍵盤行
     keyboard_rows.each do |row|
-      # 檢查正向和反向的連續字符（3-8字符）
-      (3..8).each do |length|
+      # 檢查正向和反向的連續字符（3-20字符）
+      (3..20).each do |length|
         (0..row.length - length).each do |start|
           pattern = row[start, length]
           reverse_pattern = pattern.reverse
