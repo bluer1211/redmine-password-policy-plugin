@@ -5,7 +5,7 @@
 | 項目 | 內容 |
 |------|------|
 | **名稱** | Password Policy Plugin |
-| **版本** | 2.1.2 |
+| **版本** | 2.1.5 |
 | **作者** | Jason Liu (bluer1211) |
 | **授權** | MIT License |
 | **GitHub** | https://github.com/bluer1211/redmine-password-policy-plugin |
