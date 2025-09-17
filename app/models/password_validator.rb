@@ -23,6 +23,17 @@ class PasswordValidator < ActiveModel::EachValidator
     'tgb yhn', 'yhn ujm', 'ujm ik', 'ik ol',
     'tgb yhn ujm', 'yhn ujm ik', 'ujm ik ol',
     
+    # 反向直列模式
+    'zaq1', 'xsw2', 'cde3', 'vfr4', 'bgt5', 'nhy6', 'mju7', 'ki8', 'lo9', 'p0',
+    
+    # 部分直列模式（2-3字符）
+    '1qa', 'qaz', '2ws', 'wsx', '3ed', 'edc', '4rf', 'rfv', '5tg', 'tgb',
+    '6yh', 'yhn', '7uj', 'ujm', '8i', 'ik', '9o', 'ol',
+    
+    # 短直列模式（2字符）
+    '1q', 'qa', 'az', '2w', 'ws', 'sx', '3e', 'ed', 'dc', '4r', 'rf', 'fv',
+    '5t', 'tg', 'gb', '6y', 'yh', 'hn', '7u', 'uj', 'jm', '8i', 'ik', '9o', 'ol', '0p', 'p0',
+    
     # 部分鍵盤模式（4-6字符）
     '1qaz', '2wsx', '3edc', '4rfv', '5tgb', '6yhn', '7ujm', '8ik9', '9ol0', '0p',
     'qaz2', 'wsx3', 'edc4', 'rfv5', 'tgb6', 'yhn7', 'ujm8', 'ik9o', 'lo0p',
@@ -259,7 +270,15 @@ class PasswordValidator < ActiveModel::EachValidator
       'tgb6yhn', 'yhn7ujm', 'ujm8ik', 'ik9ol',
       'tgb6yhn7ujm', 'yhn7ujm8ik', 'ujm8ik9ol',
       'tgb6yhn7ujm8ik', 'yhn7ujm8ik9ol',
-      'qaz2wsx3edc4rfv5tgb6yhn7ujm8ik9ol0p'
+      'qaz2wsx3edc4rfv5tgb6yhn7ujm8ik9ol0p',
+      # 反向直列模式
+      'zaq1', 'xsw2', 'cde3', 'vfr4', 'bgt5', 'nhy6', 'mju7', 'ki8', 'lo9', 'p0',
+      # 部分直列模式
+      '1qa', 'qaz', '2ws', 'wsx', '3ed', 'edc', '4rf', 'rfv', '5tg', 'tgb',
+      '6yh', 'yhn', '7uj', 'ujm', '8i', 'ik', '9o', 'ol',
+      # 短直列模式
+      '1q', 'qa', 'az', '2w', 'ws', 'sx', '3e', 'ed', 'dc', '4r', 'rf', 'fv',
+      '5t', 'tg', 'gb', '6y', 'yh', 'hn', '7u', 'uj', 'jm', '8i', 'ik', '9o', 'ol', '0p', 'p0'
     ]
     
     cross_row_patterns.each do |pattern|
