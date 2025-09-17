@@ -15,6 +15,13 @@ class PasswordValidator < ActiveModel::EachValidator
     # 跨行鍵盤模式（重點加強）
     'qaz2wsx3edc', 'qaz2wsx3edc4', 'wsx3edc4rfv', 'edc4rfv5tgb',
     '1qaz2wsx3edc', '2wsx3edc4rfv', '3edc4rfv5tgb', '4rfv5tgb6yhn',
+    'tgb6yhn', 'yhn7ujm', 'ujm8ik', 'ik9ol',
+    'tgb6yhn7ujm', 'yhn7ujm8ik', 'ujm8ik9ol',
+    'tgb6yhn7ujm8ik', 'yhn7ujm8ik9ol',
+    # 不含數字的跨行模式
+    'tgb', 'yhn', 'ujm', 'ik', 'ol',
+    'tgb yhn', 'yhn ujm', 'ujm ik', 'ik ol',
+    'tgb yhn ujm', 'yhn ujm ik', 'ujm ik ol',
     
     # 部分鍵盤模式（4-6字符）
     '1qaz', '2wsx', '3edc', '4rfv', '5tgb', '6yhn', '7ujm', '8ik9', '9ol0', '0p',
@@ -249,6 +256,9 @@ class PasswordValidator < ActiveModel::EachValidator
     cross_row_patterns = [
       'qaz2wsx3edc', 'qaz2wsx3', 'wsx3edc4', 'edc4rfv5',
       '1qaz2wsx', '2wsx3edc', '3edc4rfv', '4rfv5tgb',
+      'tgb6yhn', 'yhn7ujm', 'ujm8ik', 'ik9ol',
+      'tgb6yhn7ujm', 'yhn7ujm8ik', 'ujm8ik9ol',
+      'tgb6yhn7ujm8ik', 'yhn7ujm8ik9ol',
       'qaz2wsx3edc4rfv5tgb6yhn7ujm8ik9ol0p'
     ]
     
