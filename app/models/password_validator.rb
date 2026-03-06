@@ -113,8 +113,8 @@ class PasswordValidator < ActiveModel::EachValidator
       settings = Setting.plugin_password_policy
       return unless settings # 如果沒有設定，跳過驗證
       
-      # 檢查插件是否啟用
-      unless settings['enabled']
+      # 檢查插件是否啟用（支援 true/false、'1'/'0'）
+      unless enabled_setting?(settings['enabled'])
         Rails.logger.debug "Password Policy Plugin is disabled, skipping validation"
         return
       end
@@ -148,7 +148,7 @@ class PasswordValidator < ActiveModel::EachValidator
 
   def perform_validations(record, attribute, value, settings)
     # 檢查插件是否啟用
-    if !(settings['enabled'].to_s == 'true' || settings['enabled'].to_s == '1')
+    unless enabled_setting?(settings['enabled'])
       Rails.logger.debug "Password Policy Plugin is disabled, skipping validation"
       return
     end
@@ -160,31 +160,31 @@ class PasswordValidator < ActiveModel::EachValidator
     end
     
     # 檢查大寫字母
-    if settings['require_uppercase'] && !value.match(UPPERCASE_REGEX)
+    if enabled_setting?(settings['require_uppercase']) && !value.match(UPPERCASE_REGEX)
       record.errors.add(attribute, :must_contain_uppercase)
       Rails.logger.debug "Password missing uppercase for #{record.class.name}##{record.id || 'new'}"
     end
     
     # 檢查小寫字母
-    if settings['require_lowercase'] && !value.match(LOWERCASE_REGEX)
+    if enabled_setting?(settings['require_lowercase']) && !value.match(LOWERCASE_REGEX)
       record.errors.add(attribute, :must_contain_lowercase)
       Rails.logger.debug "Password missing lowercase for #{record.class.name}##{record.id || 'new'}"
     end
     
     # 檢查數字
-    if settings['require_numbers'] && !value.match(NUMBERS_REGEX)
+    if enabled_setting?(settings['require_numbers']) && !value.match(NUMBERS_REGEX)
       record.errors.add(attribute, :must_contain_numbers)
       Rails.logger.debug "Password missing numbers for #{record.class.name}##{record.id || 'new'}"
     end
     
     # 檢查特殊字符（使用更精確的驗證）
-    if settings['require_special_chars'] && !SPECIAL_CHARS.any? { |char| value.include?(char) }
+    if enabled_setting?(settings['require_special_chars']) && !SPECIAL_CHARS.any? { |char| value.include?(char) }
       record.errors.add(attribute, :must_contain_special_chars)
       Rails.logger.debug "Password missing special characters for #{record.class.name}##{record.id || 'new'}"
     end
     
     # 檢查連續字符（使用更高效的匹配）
-    if settings['prevent_sequential_chars']
+    if enabled_setting?(settings['prevent_sequential_chars'])
       if contains_sequential_chars?(value)
         record.errors.add(attribute, :contains_sequential_chars)
         Rails.logger.debug "Password contains sequential characters for #{record.class.name}##{record.id || 'new'}"
@@ -192,7 +192,7 @@ class PasswordValidator < ActiveModel::EachValidator
     end
     
     # 檢查連續鍵盤位置字符
-    if settings['prevent_keyboard_patterns']
+    if enabled_setting?(settings['prevent_keyboard_patterns'])
       if contains_keyboard_patterns?(value)
         record.errors.add(attribute, :contains_keyboard_patterns)
         Rails.logger.debug "Password contains keyboard patterns for #{record.class.name}##{record.id || 'new'}"
@@ -200,7 +200,7 @@ class PasswordValidator < ActiveModel::EachValidator
     end
     
     # 檢查重複字符
-    if settings['prevent_repetitive_chars']
+    if enabled_setting?(settings['prevent_repetitive_chars'])
       if value.match(REPETITIVE_CHARS_REGEX)
         record.errors.add(attribute, :contains_repetitive_chars)
         Rails.logger.debug "Password contains repetitive characters for #{record.class.name}##{record.id || 'new'}"
@@ -208,12 +208,16 @@ class PasswordValidator < ActiveModel::EachValidator
     end
     
     # 檢查常見密碼
-    if settings['prevent_common_passwords']
+    if enabled_setting?(settings['prevent_common_passwords'])
       if COMMON_PASSWORDS.include?(value.downcase)
         record.errors.add(attribute, :is_common_password)
         Rails.logger.debug "Password is common password for #{record.class.name}##{record.id || 'new'}"
       end
     end
+  end
+
+  def enabled_setting?(value)
+    value.to_s == 'true' || value.to_s == '1'
   end
 
   def contains_sequential_chars?(value)

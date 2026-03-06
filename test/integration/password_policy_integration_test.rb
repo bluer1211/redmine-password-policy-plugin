@@ -217,6 +217,36 @@ class PasswordPolicyIntegrationTest < ActionDispatch::IntegrationTest
     assert_select '.error', /密碼必須包含至少一個大寫字母/
   end
 
+  def test_string_zero_settings_are_treated_as_disabled
+    # 模擬 Redmine 設定頁常見輸入：字串 '0' / '1'
+    Setting.plugin_password_policy = {
+      'enabled' => '1',
+      'min_length' => 8,
+      'require_uppercase' => '0',
+      'require_lowercase' => '0',
+      'require_numbers' => '0',
+      'require_special_chars' => '0',
+      'prevent_common_passwords' => '0',
+      'prevent_sequential_chars' => '0',
+      'prevent_keyboard_patterns' => '0',
+      'prevent_repetitive_chars' => '0'
+    }
+
+    # 若 '0' 被誤判為 truthy，這個密碼會被擋；修正後應可通過
+    post '/users', params: {
+      user: {
+        login: 'testuser_string_zero',
+        firstname: 'Test',
+        lastname: 'StringZero',
+        email: 'testuser_string_zero@example.com',
+        password: 'simplepass',
+        password_confirmation: 'simplepass'
+      }
+    }
+
+    assert_response :redirect
+  end
+
   # 新增：測試詳細錯誤訊息功能
   def test_detailed_error_messages
     # 測試各種錯誤類型的詳細訊息
