@@ -311,9 +311,13 @@ class PasswordPolicyIntegrationTest < base_integration_class
 
   def test_contains_keyboard_patterns_method
     validator = PasswordValidator.new(attributes: [:password])
-    # 測試鍵盤模式檢測
+    # 測試鍵盤模式檢測（至少連續 4 碼才算）
     assert validator.send(:contains_keyboard_patterns?, 'password1qaz2wsx')
     assert !validator.send(:contains_keyboard_patterns?, 'password123')
+    assert !validator.send(:contains_keyboard_patterns?, 'passwordqwe')
+    assert !validator.send(:contains_keyboard_patterns?, 'password147')
+    assert validator.send(:contains_keyboard_patterns?, 'passwordqwer')
+    assert validator.send(:contains_keyboard_patterns?, 'password1472')
   end
 
   # 新增：測試工具類別
