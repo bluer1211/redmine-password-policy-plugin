@@ -361,6 +361,7 @@ class PasswordValidator < ActiveModel::EachValidator
   # 配置常數
   MIN_LENGTH_RANGE = (1..50).freeze
   MAX_LENGTH = 1000
+  KEYBOARD_PATTERN_MIN_LENGTH = 4
 
   def validate_each(record, attribute, value)
     return if value.blank?
@@ -475,7 +476,18 @@ class PasswordValidator < ActiveModel::EachValidator
 
   # 新增：檢查鍵盤模式
   private def contains_keyboard_patterns?(value)
-    KEYBOARD_PATTERNS.any? { |pattern| value.downcase.include?(pattern.downcase) }
+    value_downcase = value.downcase
+
+    static_hit = KEYBOARD_PATTERNS.any? do |pattern|
+      next false if pattern.length < KEYBOARD_PATTERN_MIN_LENGTH
+      value_downcase.include?(pattern.downcase)
+    end
+    return true if static_hit
+
+    # 與正式實作一致：也檢查動態鍵盤模式
+    return true if contains_dynamic_keyboard_patterns?(value_downcase)
+
+    false
   end
 
   # 動態檢測鍵盤模式
@@ -492,8 +504,8 @@ class PasswordValidator < ActiveModel::EachValidator
     
     # 檢查每個鍵盤行
     keyboard_rows.each do |row|
-      # 檢查正向和反向的連續字符（3-6字符）
-      (3..6).each do |length|
+      # 檢查正向和反向的連續字符（最少 4 字符）
+      (KEYBOARD_PATTERN_MIN_LENGTH..6).each do |length|
         (0..row.length - length).each do |start|
           pattern = row[start, length]
           reverse_pattern = pattern.reverse
@@ -508,10 +520,12 @@ class PasswordValidator < ActiveModel::EachValidator
     # 檢測數字鍵盤模式
     numpad_patterns = [
       '147', '258', '369', '741', '852', '963',
-      '147258369', '963852741'
+      '147258369', '963852741',
+      '1472', '2583', '3694', '7418', '8529', '9630'
     ]
     
     numpad_patterns.each do |pattern|
+      next if pattern.length < KEYBOARD_PATTERN_MIN_LENGTH
       if value_downcase.include?(pattern)
         return true
       end
@@ -1033,22 +1047,26 @@ class PasswordPolicyIntegrationTest < ActionDispatch::IntegrationTest
     # 測試部分鍵盤模式
     assert validator.send(:contains_keyboard_patterns?, '1qaz@WSX3edc'), "應該檢測到部分鍵盤模式 1qaz"
     assert validator.send(:contains_keyboard_patterns?, 'password1qaz'), "應該檢測到部分鍵盤模式 1qaz"
-    assert validator.send(:contains_keyboard_patterns?, 'MyP@ssw0rdWSX'), "應該檢測到部分鍵盤模式 WSX"
+    assert !validator.send(:contains_keyboard_patterns?, 'MyP@ssw0rdWSX'), "3 碼 WSX 不應該觸發（至少 4 碼）"
     assert validator.send(:contains_keyboard_patterns?, 'password3edc'), "應該檢測到部分鍵盤模式 3edc"
     
     # 測試數字鍵盤模式
-    assert validator.send(:contains_keyboard_patterns?, 'password147'), "應該檢測到數字鍵盤模式 147"
-    assert validator.send(:contains_keyboard_patterns?, 'MyP@ss258'), "應該檢測到數字鍵盤模式 258"
-    assert validator.send(:contains_keyboard_patterns?, 'password369'), "應該檢測到數字鍵盤模式 369"
+    assert !validator.send(:contains_keyboard_patterns?, 'password147'), "3 碼 147 不應該觸發（至少 4 碼）"
+    assert !validator.send(:contains_keyboard_patterns?, 'MyP@ss258'), "3 碼 258 不應該觸發（至少 4 碼）"
+    assert !validator.send(:contains_keyboard_patterns?, 'password369'), "3 碼 369 不應該觸發（至少 4 碼）"
     
     # 測試字母鍵盤模式
-    assert validator.send(:contains_keyboard_patterns?, 'passwordqwe'), "應該檢測到字母鍵盤模式 qwe"
-    assert validator.send(:contains_keyboard_patterns?, 'MyP@ssasd'), "應該檢測到字母鍵盤模式 asd"
-    assert validator.send(:contains_keyboard_patterns?, 'passwordzxc'), "應該檢測到字母鍵盤模式 zxc"
+    assert !validator.send(:contains_keyboard_patterns?, 'passwordqwe'), "3 碼 qwe 不應該觸發（至少 4 碼）"
+    assert !validator.send(:contains_keyboard_patterns?, 'MyP@ssasd'), "3 碼 asd 不應該觸發（至少 4 碼）"
+    assert !validator.send(:contains_keyboard_patterns?, 'passwordzxc'), "3 碼 zxc 不應該觸發（至少 4 碼）"
     
     # 測試大小寫混合模式
-    assert validator.send(:contains_keyboard_patterns?, 'passwordQWE'), "應該檢測到大小寫混合模式 QWE"
-    assert validator.send(:contains_keyboard_patterns?, 'MyP@ssASD'), "應該檢測到大小寫混合模式 ASD"
+    assert !validator.send(:contains_keyboard_patterns?, 'passwordQWE'), "3 碼 QWE 不應該觸發（至少 4 碼）"
+    assert !validator.send(:contains_keyboard_patterns?, 'MyP@ssASD'), "3 碼 ASD 不應該觸發（至少 4 碼）"
+
+    # 4 碼應觸發
+    assert validator.send(:contains_keyboard_patterns?, 'passwordqwer'), "4 碼 qwer 應該觸發"
+    assert validator.send(:contains_keyboard_patterns?, 'password1472'), "4 碼 1472 應該觸發"
     
     # 測試正常密碼（不應該被檢測）
     assert !validator.send(:contains_keyboard_patterns?, 'MyS3cur3P@ssw0rd!'), "正常密碼不應該被檢測"
@@ -1064,13 +1082,17 @@ class PasswordPolicyIntegrationTest < ActionDispatch::IntegrationTest
     assert validator.send(:contains_dynamic_keyboard_patterns?, '1qaz'), "應該檢測到動態鍵盤模式 1qaz"
     assert validator.send(:contains_dynamic_keyboard_patterns?, 'wsx3'), "應該檢測到動態鍵盤模式 wsx3"
     assert validator.send(:contains_dynamic_keyboard_patterns?, 'edc4'), "應該檢測到動態鍵盤模式 edc4"
-    assert validator.send(:contains_dynamic_keyboard_patterns?, '147'), "應該檢測到數字鍵盤模式 147"
-    assert validator.send(:contains_dynamic_keyboard_patterns?, '258'), "應該檢測到數字鍵盤模式 258"
-    assert validator.send(:contains_dynamic_keyboard_patterns?, '369'), "應該檢測到數字鍵盤模式 369"
+    assert !validator.send(:contains_dynamic_keyboard_patterns?, '147'), "3 碼 147 不應該觸發（至少 4 碼）"
+    assert !validator.send(:contains_dynamic_keyboard_patterns?, '258'), "3 碼 258 不應該觸發（至少 4 碼）"
+    assert !validator.send(:contains_dynamic_keyboard_patterns?, '369'), "3 碼 369 不應該觸發（至少 4 碼）"
     
     # 測試反向模式
     assert validator.send(:contains_dynamic_keyboard_patterns?, 'zaq1'), "應該檢測到反向鍵盤模式 zaq1"
-    assert validator.send(:contains_dynamic_keyboard_patterns?, '741'), "應該檢測到反向數字鍵盤模式 741"
+    assert !validator.send(:contains_dynamic_keyboard_patterns?, '741'), "3 碼 741 不應該觸發（至少 4 碼）"
+
+    # 4 碼應觸發
+    assert validator.send(:contains_dynamic_keyboard_patterns?, '1472'), "4 碼 1472 應該觸發"
+    assert validator.send(:contains_dynamic_keyboard_patterns?, 'qwer'), "4 碼 qwer 應該觸發"
     
     # 測試正常密碼（不應該被檢測）
     assert !validator.send(:contains_dynamic_keyboard_patterns?, 'MyS3cur3P@ssw0rd!'), "正常密碼不應該被檢測"

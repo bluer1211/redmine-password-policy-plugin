@@ -92,6 +92,7 @@ class PasswordValidator < ActiveModel::EachValidator
   # 配置驗證常數
   MIN_LENGTH_RANGE = (1..50).freeze
   MAX_LENGTH = 1000
+  KEYBOARD_PATTERN_MIN_LENGTH = 4
 
   def validate_each(record, attribute, value)
     return if value.blank?
@@ -239,8 +240,8 @@ class PasswordValidator < ActiveModel::EachValidator
     
     # 檢查每個鍵盤行
     keyboard_rows.each do |row|
-      # 檢查正向和反向的連續字符（3-20字符）
-      (3..20).each do |length|
+      # 檢查正向和反向的連續字符（最少 4 字符）
+      (KEYBOARD_PATTERN_MIN_LENGTH..20).each do |length|
         (0..row.length - length).each do |start|
           pattern = row[start, length]
           reverse_pattern = pattern.reverse
@@ -261,6 +262,7 @@ class PasswordValidator < ActiveModel::EachValidator
     ]
     
     numpad_patterns.each do |pattern|
+      next if pattern.length < KEYBOARD_PATTERN_MIN_LENGTH
       if value_downcase.include?(pattern)
         Rails.logger.debug "Password Policy: 檢測到數字鍵盤模式 '#{pattern}'"
         return true
@@ -286,6 +288,7 @@ class PasswordValidator < ActiveModel::EachValidator
     ]
     
     cross_row_patterns.each do |pattern|
+      next if pattern.length < KEYBOARD_PATTERN_MIN_LENGTH
       if value_downcase.include?(pattern)
         Rails.logger.debug "Password Policy: 檢測到跨行鍵盤模式 '#{pattern}'"
         return true
@@ -300,6 +303,7 @@ class PasswordValidator < ActiveModel::EachValidator
     
     # 1. 檢查預定義模式（改進版本）
     KEYBOARD_PATTERNS.each do |pattern|
+      next if pattern.length < KEYBOARD_PATTERN_MIN_LENGTH
       if value_downcase.include?(pattern.downcase)
         Rails.logger.debug "Password Policy: 檢測到鍵盤模式 '#{pattern}' 在密碼中"
         return true
@@ -319,6 +323,7 @@ class PasswordValidator < ActiveModel::EachValidator
     ]
     
     symbol_patterns.each do |pattern|
+      next if pattern.length < KEYBOARD_PATTERN_MIN_LENGTH
       if value.include?(pattern)
         Rails.logger.debug "Password Policy: 檢測到特殊字符鍵盤模式 '#{pattern}'"
         return true
