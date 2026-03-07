@@ -1,38 +1,53 @@
-密碼政策插件測試報告
-==================================================
-生成時間: 2025-08-14 08:56:04
-測試環境: Ruby 2.6.10 (universal.x86_64-darwin24)
+密碼政策插件測試報告（分流模式）
+============================================================
+開始時間: 2026-03-07 06:35:14
+結束時間: 2026-03-07 06:35:14
 
-測試統計:
-  總測試數: 21
-  通過測試: 21
-  失敗測試: 0
-  成功率: 100.0%
+[stub suite] PASS
+  exit_code: 0
+  duration_s: 0.284
+  output:
+    ============================================================
+    ������������������������������������
+    ������������: 2026-03-07 06:35:14
+    ============================================================
+    
+    ���� ������������������...
+    ----------------------------------------
+    ������������������: PasswordPolicyIntegration
+      ��� test_config_validator
+      ��� test_config_validator_enabled_method
+      ��� test_password_too_long
+      ��� test_user_registration_with_weak_password
+      ��� test_password_with_unicode_characters
+      ��� test_user_registration_with_strong_password
+      ��� test_password_change_with_weak_password
+      ��� test_password_change_with_strong_password
+      ��� test_password_strength_calculation
+      ��� test_password_strength_description
+      ��� test_plugin_disabled_skips_validation
+      ��� test_plugin_enabled_performs_validation
+      ��� test_detailed_error_messages
+      ��� test_settings_validation
+      ��� test_performance_optimizations
+      ��� test_contains_sequential_chars_method
+      ��� test_contains_keyboard_patterns_method
+      ��� test_enhanced_keyboard_pattern_detection
+      ��� test_dynamic_keyboard_pattern_detection
+      ��� test_strength_evaluator
+      ��� test_suggestion_generator
+    ============================================================
+    ���������������
+    ������������: 2026-03-07 06:35:14
+    ============================================================
+    Run options: --seed 37071
+    
+    # Running:
+    
+    .....................
+    
+    Finished in 0.003744s, 5608.9744 runs/s, 26442.3078 assertions/s.
+    
+    21 runs, 99 assertions, 0 failures, 0 errors, 0 skips
 
-詳細結果:
-  ✅ test_config_validator_enabled_method (0.02ms)
-  ✅ test_password_too_long (0.11ms)
-  ✅ test_user_registration_with_weak_password (0.05ms)
-  ✅ test_password_with_unicode_characters (0.04ms)
-  ✅ test_user_registration_with_strong_password (0.04ms)
-  ✅ test_password_change_with_weak_password (0.01ms)
-  ✅ test_password_change_with_strong_password (0.05ms)
-  ✅ test_password_strength_calculation (0.04ms)
-  ✅ test_password_strength_description (0.01ms)
-  ✅ test_plugin_disabled_skips_validation (0.02ms)
-  ✅ test_plugin_enabled_performs_validation (0.02ms)
-  ✅ test_detailed_error_messages (0.03ms)
-  ✅ test_settings_validation (0.02ms)
-  ✅ test_performance_optimizations (0.01ms)
-  ✅ test_contains_sequential_chars_method (0.01ms)
-  ✅ test_contains_keyboard_patterns_method (0.07ms)
-  ✅ test_enhanced_keyboard_pattern_detection (0.33ms)
-  ✅ test_dynamic_keyboard_pattern_detection (0.36ms)
-  ✅ test_strength_evaluator (0.02ms)
-  ✅ test_suggestion_generator (0.01ms)
-  ✅ test_config_validator (0.06ms)
-
-效能統計:
-  平均執行時間: 0.06ms
-  最長執行時間: 0.36ms
-  最短執行時間: 0.01ms
+總結: 1/1 通過
